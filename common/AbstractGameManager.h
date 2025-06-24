@@ -1,6 +1,11 @@
 #ifndef ABSTRACTGAMEMANAGER_H
 #define ABSTRACTGAMEMANAGER_H
 
+class TankAlgorithmFactory;
+class Player;
+class SatelliteView;
+class GameResult;
+
 class AbstractGameManager {
 public:
     virtual ~AbstractGameManager() {}

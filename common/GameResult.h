@@ -1,6 +1,8 @@
 #ifndef GAMERESULT_H
 #define GAMERESULT_H
 
+#include <vector>
+
 struct GameResult {
     int winner; // 0 = tie
     enum Reason { ALL_TANKS_DEAD, MAX_STEPS, ZERO_SHELLS };

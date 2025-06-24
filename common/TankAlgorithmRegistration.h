@@ -1,6 +1,8 @@
 #ifndef TANKALGORITHMREGISTRATION_H
 #define TANKALGORITHMREGISTRATION_H
 
+#include "TankAlgorithm.h"
+
 struct TankAlgorithmRegistration {
     TankAlgorithmRegistration(TankAlgorithmFactory);
 };

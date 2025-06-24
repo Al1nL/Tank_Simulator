@@ -1,6 +1,10 @@
 #ifndef GAMEMANAGERREGISTRATION_H
 #define GAMEMANAGERREGISTRATION_H
 
+#include <memory>
+#include <functional>
+#include "AbstractGameManager.h"
+
 struct GameManagerRegistration {
     GameManagerRegistration(std::function<std::unique_ptr<AbstractGameManager>()>);
 };

@@ -1,6 +1,12 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include <memory>
+#include <functional>
+
+class SatelliteView;
+class TankAlgorithm;
+
 class Player {
 public:
     virtual ~Player() {}

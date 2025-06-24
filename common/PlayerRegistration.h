@@ -2,6 +2,7 @@
 #define PLAYERREGISTRATION_H
 
 #include "Player.h"
+
 struct PlayerRegistration {
     PlayerRegistration(PlayerFactory);
 };
