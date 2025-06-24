@@ -3,9 +3,22 @@ project(Tank_Simulator)
 
 set(CMAKE_CXX_STANDARD 20)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")  # Check if compiler is GCC (g++)
+        add_compile_options(
+            -Wall
+            -Wextra
+            -Werror
+            -pedantic
+        )
+    endif()
+endif()
+
 # Source files
 set(ALGORITHM_SRC
-    # Add more files here
+        Algorithm/source/Player_212535058_324022904.cpp
+        Algorithm/source/TankAlgorithm_212535058_324022904.cpp
+        # Add more files here
 )
 
 set(GAMEMANAGER_SRC
@@ -13,7 +26,9 @@ set(GAMEMANAGER_SRC
 )
 
 set(SIMULATOR_SRC
-    # Add more files here
+        Simulator/source/AlgorithmRegistrar.cpp
+        Simulator/source/PlayerRegistration.cpp
+        Simulator/source/TankAlgorithmRegistration.cpp
 )
 
 set(USERCOMMON_SRC
@@ -34,6 +49,8 @@ add_executable(Tank_Simulator ${SOURCES} main.cpp)
 
 file(GLOB SOURCES
     "${CMAKE_SOURCE_DIR}/common/*.h"
+    "${CMAKE_SOURCE_DIR}/Simulator/header/*.h"
+    "${CMAKE_SOURCE_DIR}/Algorithm/header/*.h"
 )
 
 ## Include directories

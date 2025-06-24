@@ -9,7 +9,7 @@
 class AlgorithmRegistrar {
         class AlgorithmAndPlayerFactories {
             std::string so_name;
-            TankAlgorithmFactory tankAlgorithmFactory;
+            TankAlgorithmFactory tankAlgorithmFactory  = nullptr;
             PlayerFactory playerFactory;
         public:
             AlgorithmAndPlayerFactories(const std::string& so_name) : so_name(so_name) {}
@@ -18,7 +18,7 @@ class AlgorithmRegistrar {
                 tankAlgorithmFactory = std::move(factory);
             }
             void setPlayerFactory(PlayerFactory&& factory) {
-                assert(playerFactory == nullptr);
+                assert(playerFactory);
                 playerFactory = std::move(factory);
             }
             const std::string& name() const { return so_name; }
@@ -42,7 +42,7 @@ class AlgorithmRegistrar {
 public:
     static AlgorithmRegistrar& getAlgorithmRegistrar();
     void createAlgorithmFactoryEntry(const std::string& name) {
-        algorithms.emplace_back(name);
+        algorithms.emplace_back(AlgorithmAndPlayerFactories(name));
     }
     void addPlayerFactoryToLastEntry(PlayerFactory&& factory) {
         algorithms.back().setPlayerFactory(std::move(factory));
