@@ -18,7 +18,7 @@ class AlgorithmRegistrar {
                 tankAlgorithmFactory = std::move(factory);
             }
             void setPlayerFactory(PlayerFactory&& factory) {
-                assert(playerFactory);
+                assert(playerFactory == nullptr);
                 playerFactory = std::move(factory);
             }
             const std::string& name() const { return so_name; }
