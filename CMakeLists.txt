@@ -18,6 +18,7 @@ endif()
 set(ALGORITHM_SRC
         Algorithm/source/Player_212535058_324022904.cpp
         Algorithm/source/TankAlgorithm_212535058_324022904.cpp
+        Algorithm/source/TankBattleInfo.cpp
         # Add more files here
 )
 
