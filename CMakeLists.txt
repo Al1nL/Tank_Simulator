@@ -36,7 +36,6 @@ set(USERCOMMON_SRC
         UserCommon/source/Shell.cpp
         UserCommon/source/Tank.cpp
         UserCommon/source/Wall.cpp
-        # Add more files here
 )
 
 
@@ -55,6 +54,7 @@ file(GLOB SOURCES
     "${CMAKE_SOURCE_DIR}/common/*.h"
     "${CMAKE_SOURCE_DIR}/Simulator/header/*.h"
     "${CMAKE_SOURCE_DIR}/Algorithm/header/*.h"
+    "${CMAKE_SOURCE_DIR}/UserCommon/header/*.h"
 )
 
 ## Include directories
