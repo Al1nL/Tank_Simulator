@@ -32,7 +32,11 @@ set(SIMULATOR_SRC
 )
 
 set(USERCOMMON_SRC
-    # Add more files here
+        UserCommon/source/Mine.cpp
+        UserCommon/source/Shell.cpp
+        UserCommon/source/Tank.cpp
+        UserCommon/source/Wall.cpp
+        # Add more files here
 )
 
 
