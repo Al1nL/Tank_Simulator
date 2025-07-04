@@ -9,20 +9,21 @@ namespace GameManager_212535058_324022904
 
     GameResult GameManager::run(
         size_t map_width, size_t map_height,
-        const SatelliteView &map,
-        size_t steps, size_t numofshells,
-        Player &player1, Player &player2,
-        TankAlgorithmFactory player1_tank_algo_factory,
-        TankAlgorithmFactory player2_tank_algo_factory)
-    {
+   const SatelliteView& map, // <= assume it is a snapshot, NOT updated
+string map_name,
+size_t maxSteps, size_t numShells,
+Player& player1, string name1, Player& player2, string name2,
+TankAlgorithmFactory player1_tank_algo_factory,
+TankAlgorithmFactory player2_tank_algo_factory)
+{
         // Initialize game state
         rows = map_height;
         cols = map_width;
-        max_steps = steps;
+        max_steps = maxSteps;
         current_step = 0;
-        num_shells = numofshells;
+        num_shells = numShells;
         steps_since_no_shells = 0;
-
+        output_file = "output_P1_"+name1+"_P2_"+name2+"_Map_"+map_name+".txt";
         // Initialize board and tanks
         players.push_back(unique_ptr<Player>(&player1));
         players.push_back(unique_ptr<Player>(&player2));
@@ -135,10 +136,11 @@ namespace GameManager_212535058_324022904
         // Apply moves and update game state
         board->applyMoves(actionRequests);
         updateTanksInfo(tanks);
+        logs.push_back(generateRoundOutput(actionRequests));
         board->boardCleanup();
     }
 
-    GameResult GameManager::prepareResult() const
+    GameResult GameManager::prepareResult()
     {
         GameResult result;
         int p1_tanks = countAliveTanks(1);
@@ -177,7 +179,7 @@ namespace GameManager_212535058_324022904
         return result;
     }
 
-    bool GameManager::isGameOver() const
+    bool GameManager::isGameOver()
     {
         int p1_tanks = countAliveTanks(1);
         int p2_tanks = countAliveTanks(2);
@@ -188,17 +190,9 @@ namespace GameManager_212535058_324022904
                steps_since_no_shells >= 40; // No shells left for 40 steps
     }
 
-    int GameManager::countAliveTanks(int player_id) const
+    int GameManager::countAliveTanks(int player_id)
     {
-        int count = 0;
-        for (const auto &tank : board->getSortedTanks())
-        {
-            if (tank->getOwnerId() == player_id && !tank->isDestroyed())
-            {
-                count++;
-            }
-        }
-        return count;
+        return player_tank_count[player_id];
     }
 
     TankAlgorithm *GameManager::findTankAlgorithmById(Tank *tank)
@@ -254,5 +248,97 @@ namespace GameManager_212535058_324022904
                 player.updateTankWithBattleInfo(*algo, *board_view);
             }
         }
+    }
+
+
+    /**
+     * @brief Converts an ActionRequest enum to its string representation.
+     * @param action The ActionRequest to convert.
+     * @return The string corresponding to the action.
+     */
+    string GameManager::actionToString(ActionRequest action)
+    {
+        switch (action)
+        {
+            case ActionRequest::MoveForward:
+                return "MoveForward";
+            case ActionRequest::MoveBackward:
+                return "MoveBackward";
+            case ActionRequest::RotateLeft90:
+                return "RotateLeft90";
+            case ActionRequest::RotateRight90:
+                return "RotateRight90";
+            case ActionRequest::RotateLeft45:
+                return "RotateLeft45";
+            case ActionRequest::RotateRight45:
+                return "RotateRight45";
+            case ActionRequest::Shoot:
+                return "Shoot";
+            case ActionRequest::GetBattleInfo:
+                return "GetBattleInfo";
+            case ActionRequest::DoNothing:
+                return "DoNothing";
+            default:
+                return "Unknown";
+        }
+    }
+
+    /**
+     * @brief Writes the logs collected during the game to the output file.
+     *        Appends each log entry on a new line.
+     */
+    void GameManager::writeOutput()
+    {
+        ofstream out(output_file);
+        for (const auto &line : logs)
+        {
+            out << line << "\n";
+        }
+    }
+    /**
+     * @brief Converts the actions of tanks for a round into a formatted string output.
+     * @param tankActions Map of Tank pointers to their respective ActionRequests.
+     * @return String summarizing the actions performed by each tank.
+     */
+    string GameManager::generateRoundOutput(map<Tank *, ActionRequest> tankActions)
+    {
+        vector<string> actions;
+        // vector<Tank*> tanks=board->getSortedTanks();
+        for (const auto &[tank, acts] : tankActions)
+        {
+            string move = actionToString(acts);
+            if (tank->isDestroyed())
+            {
+                if (tank->isKilledThisRound())
+                {
+                    actions.push_back(tank->getActionSuccess() ? move + " (ignored) (killed)" : " (killed)");
+                    tank->setKilledThisRound(false);
+                }
+                else
+                {
+                    actions.push_back("killed");
+                }
+                continue;
+            }
+            actions.push_back(tank->getActionSuccess() ? move : move + " (ignored)");
+        }
+        return joinActions(actions);
+    }
+
+    /**
+     * @brief Joins a vector of action strings into a single comma-separated string.
+     * @param actions Vector of action strings.
+     * @return Single string with actions separated by commas.
+     */
+    string GameManager::joinActions(const vector<string> &actions)
+    {
+        string result;
+        for (size_t i = 0; i < actions.size(); ++i)
+        {
+            if (i != 0)
+                result += ", ";
+            result += actions[i];
+        }
+        return result;
     }
 }
