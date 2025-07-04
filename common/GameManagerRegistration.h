@@ -6,7 +6,7 @@
 #include "AbstractGameManager.h"
 
 struct GameManagerRegistration {
-    GameManagerRegistration(std::function<std::unique_ptr<AbstractGameManager>()>);
+    GameManagerRegistration(GameManagerFactory);
 };
 
 #define REGISTER_GAME_MANAGER(class_name) \
