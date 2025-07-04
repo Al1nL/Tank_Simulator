@@ -8,14 +8,15 @@
 
 
 class Simulator{
-
-  Simulator() = default;
-  Simulator(Simulator const&) = delete;
-  Simulator& operator=(const Simulator&) = delete;
-  ~Simulator() {}
-
   typedef void (*plugin_init_func)();
-  void loadSharedObjectsFromFolder(const std::string& folderPath);
+  bool loadAlgorithm(const std::string& folderPath);
+
+  public:
+    Simulator() {};
+    Simulator(Simulator const&) = delete;
+    Simulator& operator=(const Simulator&) = delete;
+    ~Simulator() {}
+    bool initGame(const std::string& folderPath);
 };
 
 
