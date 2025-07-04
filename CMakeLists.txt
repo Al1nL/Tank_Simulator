@@ -19,6 +19,7 @@ set(ALGORITHM_SRC
         Algorithm/source/Player_212535058_324022904.cpp
         Algorithm/source/TankAlgorithm_212535058_324022904.cpp
         Algorithm/source/TankBattleInfo.cpp
+        Algorithm/source/MyTankAlgorithm.cpp
         # Add more files here
 )
 
