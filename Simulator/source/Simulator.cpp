@@ -18,28 +18,32 @@ bool Simulator::loadAlgorithm(const std::string& folderPath) {
         // Create a new entry for this algorithm
         registrar.createAlgorithmFactoryEntry(folderPath);
 
-        // Try to find and call registration functions
-        typedef void (*register_func)();
-        
-        // Try to register TankAlgorithm
-        register_func registerTank = (register_func)dlsym(handle, "TankAlgorithm_212535058_324022904");
-        if (const char* error = dlerror()) {
-            std::cerr << "Failed to find TankAlgorithm registration: " << error << std::endl;
-            registrar.removeLast();
-            dlclose(handle);
-            return false;
-        }
-        registerTank();
+        // Load factory functions directly
+        typedef PlayerFactory (*get_player_factory)();
+        typedef TankAlgorithmFactory (*get_tank_factory)();
 
-        // Try to register Player
-        register_func registerPlayer = (register_func)dlsym(handle, "register_me_Player_212535058_324022904");
+        // Get Player factory
+        get_player_factory player_factory_func = (get_player_factory)dlsym(handle, "PlayerRegistration");
         if (const char* error = dlerror()) {
-            std::cerr << "Failed to find Player registration: " << error << std::endl;
+            std::cerr << "Failed to find Player factory: " << error << std::endl;
             registrar.removeLast();
             dlclose(handle);
             return false;
         }
-        registerPlayer();
+
+        // Get TankAlgorithm factory
+        dlerror(); // Clear previous error
+        get_tank_factory tank_factory_func = (get_tank_factory)dlsym(handle, "TankAlgorithmRegistration");
+        if (const char* error = dlerror()) {
+            std::cerr << "Failed to find TankAlgorithm factory: " << error << std::endl;
+            registrar.removeLast();
+            dlclose(handle);
+            return false;
+        }
+
+        // Register the factories
+        registrar.addPlayerFactoryToLastEntry(player_factory_func());
+        registrar.addTankAlgorithmFactoryToLastEntry(tank_factory_func());
 
         // Validate the registration
         try {
