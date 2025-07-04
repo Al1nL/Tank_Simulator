@@ -31,6 +31,7 @@ set(SIMULATOR_SRC
         Simulator/source/AlgorithmRegistrar.cpp
         Simulator/source/PlayerRegistration.cpp
         Simulator/source/TankAlgorithmRegistration.cpp
+        Simulator/source/Simulator.cpp
 )
 
 set(USERCOMMON_SRC
