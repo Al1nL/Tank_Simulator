@@ -3,8 +3,8 @@
 
 #include <vector>
 #include <memory>
-class SatelliteView;
 
+class SatelliteView;
 struct GameResult {
     int winner; // 0 = tie
     enum Reason { ALL_TANKS_DEAD, MAX_STEPS, ZERO_SHELLS };
@@ -12,7 +12,6 @@ struct GameResult {
     std::vector<size_t> remaining_tanks; // index 0 = player 1, etc.
     std::unique_ptr<SatelliteView> gameState; // at end of game
 	size_t rounds; // total number of rounds
-
 };
 
 #endif //GAMERESULT_H
