@@ -1,7 +1,7 @@
 # Compiler and flags
 CXX := g++
 CXXFLAGS := -std=c++20 -fPIC -Wall -Wextra -Icommon
-LDFLAGS := -shared
+LDFLAGS := -shared -undefined dynamic_lookup
 
 # Source files
 SRC_DIR := Algorithm/source
