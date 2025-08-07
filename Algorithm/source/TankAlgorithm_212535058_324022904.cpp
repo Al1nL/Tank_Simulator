@@ -4,7 +4,7 @@
 #include "../../UserCommon/header/Shell.h"
 
 using namespace Algorithm_212535058_324022904;
-// REGISTER_TANK_ALGORITHM(TankAlgorithm_212535058_324022904);
+REGISTER_TANK_ALGORITHM(TankAlgorithm_212535058_324022904);
 
 
 

@@ -1,6 +1,6 @@
 #ifndef TANKBATTLEINFO_H
 #define TANKBATTLEINFO_H
-#include "../common/BattleInfo.h"
+#include "../../common/BattleInfo.h"
 #include "../../UserCommon/header/GameObject.h"
 #include <utility>
 #include <vector>
