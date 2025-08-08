@@ -4,42 +4,110 @@
 #include <vector>
 #include <string>
 #include <memory>
-//#include <mutex>
+#include <cassert>
+#include <functional>
+#include <dlfcn.h>
+#include <mutex>
 #include "../../common/GameManagerRegistration.h"
+#include "../../common/AbstractGameManager.h"
 
 class GameManagerRegistrar {
-    struct GameManagerEntry {
+    class GameManagerEntry {
         std::string so_name;
         GameManagerFactory factory;
         void* library_handle;
 
+    public:
         GameManagerEntry(const std::string& name, void* handle = nullptr)
             : so_name(name), library_handle(handle) {}
+
+        void setFactory(GameManagerFactory&& f) {
+            assert(factory == nullptr);
+            factory = std::move(f);
+        }
+
+        const std::string& name() const { return so_name; }
+
+        std::unique_ptr<AbstractGameManager> create(bool verbose) const {
+            return factory(verbose);
+        }
+
+        bool hasFactory() const {
+            return factory != nullptr;
+        }
+
+        void* getHandle() const {
+            return library_handle;
+        }
     };
 
     std::vector<GameManagerEntry> game_managers;
-    //mutable std::mutex mutex;
+    static GameManagerRegistrar registrar;
+    mutable std::mutex mutex;
 
 public:
-    static GameManagerRegistrar& getInstance() {
-        static GameManagerRegistrar instance;
-        return instance;
-    }
+    static GameManagerRegistrar& getGameManagerRegistrar();
 
-    void registerGameManager(const std::string& name, GameManagerFactory&& factory, void* handle = nullptr) {
-        //std::lock_guard<std::mutex> lock(mutex);
+    void createGameManagerEntry(const std::string& name, void* handle = nullptr) {
+        std::lock_guard<std::mutex> lock(mutex);
         game_managers.emplace_back(name, handle);
-        game_managers.back().factory = std::move(factory);
     }
 
-    std::unique_ptr<AbstractGameManager> create(bool verbose) {
-        //std::lock_guard<std::mutex> lock(mutex);
-        if (game_managers.empty()) return nullptr;
-        return game_managers.back().factory(verbose);
+    void addFactoryToLastEntry(GameManagerFactory&& factory) {
+        std::lock_guard<std::mutex> lock(mutex);
+        game_managers.back().setFactory(std::move(factory));
     }
 
-    void unregisterAll() {
-        //std::lock_guard<std::mutex> lock(mutex);
+    struct BadRegistrationException {
+        std::string name;
+        bool hasName, hasFactory;
+    };
+
+    void validateLastRegistration() {
+        std::lock_guard<std::mutex> lock(mutex);
+        const auto& last = game_managers.back();
+        bool hasName = (last.name() != "");
+        if (!hasName || !last.hasFactory()) {
+            throw BadRegistrationException{
+                .name = last.name(),
+                .hasName = hasName,
+                .hasFactory = last.hasFactory()
+            };
+        }
+    }
+
+    void removeLast() {
+        std::lock_guard<std::mutex> lock(mutex);
+        game_managers.pop_back();
+    }
+
+    auto begin() const {
+        std::lock_guard<std::mutex> lock(mutex);
+        return game_managers.begin();
+    }
+
+    auto end() const {
+        std::lock_guard<std::mutex> lock(mutex);
+        return game_managers.end();
+    }
+
+    std::size_t count() const {
+        std::lock_guard<std::mutex> lock(mutex);
+        return game_managers.size();
+    }
+
+    void clear() {
+        std::lock_guard<std::mutex> lock(mutex);
+        game_managers.clear();
+    }
+
+    void cleanup() {
+        std::lock_guard<std::mutex> lock(mutex);
+        for (auto& entry : game_managers) {
+            if (entry.getHandle()) {
+                dlclose(entry.getHandle());
+            }
+        }
         game_managers.clear();
     }
 };
