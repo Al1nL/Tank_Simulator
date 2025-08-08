@@ -14,3 +14,4 @@ GameManagerRegistration register_me_##class_name \
 ( [] (bool verbose) { return std::make_unique<class_name>(verbose); } );
 
 #endif //GAMEMANAGERREGISTRATION_H
+
