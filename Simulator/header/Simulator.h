@@ -7,14 +7,24 @@
 #include <string>
 #include <filesystem>
 #include <unordered_map>
+#include <unordered_set>
 #include <algorithm>
-struct ProgramArguments {
-        std::string mode;  // "-comparative" or "-competition"
-        std::unordered_map<std::string, std::string> arguments;
-        int num_threads = 1;
-        bool verbose = false;
-    };
+#include <fstream>
+#include <future>
 
+struct ProgramArguments {
+    std::string mode;  // "-comparative" or "-competition"
+    std::unordered_map<std::string, std::string> arguments;
+    int num_threads = 1;
+    bool verbose = false;
+};
+
+struct GameResult {
+    std::string manager_name;
+    std::string final_state;
+    int final_round;
+    std::string game_result;  // e.g., "Player 1 won by elimination"
+};
 class Simulator{
     ProgramArguments args;
   typedef void (*plugin_init_func)();
