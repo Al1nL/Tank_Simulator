@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include "./Simulator/header/AlgorithmRegistrar.h"
+#include "./Simulator/header/GameManagerRegistrar.h"
 // #include "./common/TankAlgorithmRegistration.h"
 // #include "./common/PlayerRegistration.h"
 // #include "./common/GameManagerRegistration.h"
@@ -16,9 +17,13 @@
 // }
 
 int main(int argc, char** argv) {
-    const std::string soPath = argv[1];
+    const std::string soPath = argv[1],
+        gameManagerPath = argv[2];
     Simulator* sim = new Simulator();
-    if (sim->initGame(soPath)) {
+    std::vector<std::string> so_args;
+    so_args.push_back(soPath);
+    so_args.push_back(gameManagerPath);
+    if (sim->initGame(so_args)) {
         auto& registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
         
         // Example usage of the loaded algorithm
