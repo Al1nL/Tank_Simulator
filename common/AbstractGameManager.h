@@ -1,6 +1,7 @@
 #ifndef ABSTRACTGAMEMANAGER_H
 #define ABSTRACTGAMEMANAGER_H
 
+#include <string>
 using std::string;
 #include "./TankAlgorithm.h"
 
