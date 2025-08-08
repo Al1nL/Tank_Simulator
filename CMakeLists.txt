@@ -9,7 +9,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             -Wall
             -Wextra
             -Werror
-            -pedantic
+            -pedantic 
+            -ldl 
+            -rdynamic
         )
     endif()
 endif()

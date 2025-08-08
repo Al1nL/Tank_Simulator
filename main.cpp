@@ -7,7 +7,6 @@
 // #include "./Algorithm/header/Player_212535058_324022904.h"
 // #include "./Algorithm/header/TankAlgorithm_212535058_324022904.h"
 #include "./Simulator/header/Simulator.h"
-
 // void fake_dlopen_algo_so(const std::string& name) {
 //     using namespace Algorithm_212535058_324022904;
 //     REGISTER_TANK_ALGORITHM(TankAlgorithm_212535058_324022904);
@@ -35,7 +34,7 @@ int main(int argc, char** argv) {
             std::cout << "Successfully created Player and TankAlgorithm instances" << std::endl;
         }
     } else {
-        std::cerr << "Failed to load algorithm from " << soPath << std::endl;
+        std::cerr << "Failed to load algorithm from " << soPath << std::to_string(argc) << std::endl;
         return 1;
     }
 
