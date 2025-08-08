@@ -16,27 +16,18 @@
 // }
 
 int main(int argc, char** argv) {
-    const std::string soPath = argv[1];
-    Simulator* sim = new Simulator();
-    if (sim->initGame(soPath)) {
-        auto& registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
-        
-        // Example usage of the loaded algorithm
-        if (registrar.count() > 0) {
-            const auto& algorithm = *registrar.begin();
-            
-            // Create a player instance
-            auto player = algorithm.createPlayer(1, 10, 10, 100, 50);
-            
-            // Create a tank algorithm instance
-            auto tankAlgorithm = algorithm.createTankAlgorithm(1, 1);
-            
-            std::cout << "Successfully created Player and TankAlgorithm instances" << std::endl;
-        }
-    } else {
-        std::cerr << "Failed to load algorithm from " << soPath << std::to_string(argc) << std::endl;
+
+    try {
+        Simulator simulator(argc,argv);  // Create instance with parsed args
+
+        simulator.run();
+
+        return 0;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
         return 1;
     }
+
 
     return 0;
 }
