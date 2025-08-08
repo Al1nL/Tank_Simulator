@@ -9,7 +9,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             -Wall
             -Wextra
             -Werror
-            -pedantic
+            -pedantic 
+            -ldl 
+            -rdynamic
         )
     endif()
 endif()
@@ -18,6 +20,8 @@ endif()
 set(ALGORITHM_SRC
         Algorithm/source/Player_212535058_324022904.cpp
         Algorithm/source/TankAlgorithm_212535058_324022904.cpp
+        Algorithm/source/TankBattleInfo.cpp
+        Algorithm/source/MyTankAlgorithm.cpp
         # Add more files here
 )
 
