@@ -8,6 +8,7 @@
 #include "../../UserCommon/header/Wall.h"
 #include "../header/TankBattleInfo.h"
 
+using namespace UserCommon__212535058_324022904;
 using namespace Algorithm_212535058_324022904;
 REGISTER_PLAYER(Player_212535058_324022904);
 

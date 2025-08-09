@@ -7,20 +7,23 @@
 #include <memory>
 #include <map>
 
+using GameObject = UserCommon__212535058_324022904::GameObject;
+using UserCommon__212535058_324022904::Direction;
+
 using std::map, std::vector, std::pair, std::unique_ptr, std::make_pair;
 namespace Algorithm_212535058_324022904
 {
     struct OppData
     {
         pair<int, int> opponentPos;
-        Direction opponentDir = None;
+        Direction opponentDir = Direction::None;
     };
 
     class TankBattleInfo : public BattleInfo
     {
         int id = -1;
         int player_id = -1;
-        Direction direction = None;
+        Direction direction = Direction::None;
         pair<int, int> position = {-1, -1};
         int remaining_shells = 0;
         int shoot_cooldown = 0;
@@ -65,7 +68,7 @@ namespace Algorithm_212535058_324022904
         vector<OppData> getOpponents() const;
 
         void setOpponents(vector<OppData> opps);
-        void addOpponent(pair<int, int> position, Direction dir = None);
+        void addOpponent(pair<int, int> position, Direction dir = Direction::None);
 
         GameObject *getObjectByPosition(pair<int, int> pos) const;
 

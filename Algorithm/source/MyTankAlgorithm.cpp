@@ -2,7 +2,9 @@
 #include "../header/TankBattleInfo.h"
 #include "../../UserCommon/header/Shell.h"
 
+using namespace UserCommon__212535058_324022904;
 using namespace Algorithm_212535058_324022904;
+
 /**
  * @brief Constructs a MyTankAlgorithm instance with game parameters.
  * @param player_index Index of the player that the tank will belong to.
