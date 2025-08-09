@@ -1,11 +1,13 @@
 #ifndef ABSTRACTGAMEMANAGER_H
 #define ABSTRACTGAMEMANAGER_H
 
+#include <string>
 using std::string;
+#include "./TankAlgorithm.h"
+
 class Player;
 class SatelliteView;
 class GameResult;
-class TankAlgorithm;
 
 class AbstractGameManager {
 public:

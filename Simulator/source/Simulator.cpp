@@ -4,32 +4,229 @@
 
 namespace fs = std::filesystem;
 
-bool Simulator::initGame(const std::string& folderPath){
-    return loadAlgorithm(folderPath);
+bool Simulator::initGame(const std::vector<std::string> &folderPath)
+{
+    return loadGameManager(folderPath[1]) && loadAlgorithm(folderPath[0]);
+    // TODO:need to use initialize() to set up the config from the args given.
 }
 
-bool Simulator::loadAlgorithm(const std::string& folderPath) {
+bool Simulator::initialize(const Config &config)
+{
+    config_ = config;
 
-    auto& registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
-
-    registrar.createAlgorithmFactoryEntry(folderPath);
-
-    void* handle = dlopen(folderPath.c_str(), RTLD_LAZY | RTLD_GLOBAL);
-    if (!handle) {
-        std::cerr << "Failed to load " << folderPath << ": " << dlerror() << std::endl;
+    // Validate all paths first
+    if (!validate_paths())
+    {
         return false;
     }
-   
-    // Clear any existing errors
-    dlerror();
+    try
+    {
+        // Load required libraries based on mode
+        if (config_.mode == Comparative)
+        {
+            return initializeComparativeMode();
+        }
+        else
+        {
+            return initializeCompetitionMode();
+        }
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Initialization failed: " << e.what() << std::endl;
+        return false;
+    }
+}
 
-    // Validate the registration
-    try {
+bool Simulator::initializeComparativeMode()
+{
+    // Load the two algorithms
+    if (!loadAlgorithm(config_.algorithm1) || !loadAlgorithm(config_.algorithm2))
+    {
+        return false;
+    }
+
+    // Load all game managers from the folder
+    bool found_valid_gm = false;
+    for (const auto &entry : fs::directory_iterator(config_.game_managers_folder))
+    {
+        if (entry.path().extension() == ".so")
+        {
+            if (loadGameManager(entry.path().string()))
+            {
+                found_valid_gm = true;
+            }
+        }
+    }
+
+    if (!found_valid_gm)
+    {
+        std::cerr << "Error: No valid game managers found in "
+                  << config_.game_managers_folder << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool Simulator::initializeCompetitionMode()
+{
+    // Load the game manager
+    if (!loadGameManager(config_.game_manager))
+    {
+        return false;
+    }
+
+    // Load all algorithms from the folder
+    size_t algorithm_count = 0;
+    for (const auto &entry : fs::directory_iterator(config_.algorithms_folder))
+    {
+        if (entry.path().extension() == ".so")
+        {
+            if (loadAlgorithm(entry.path().string()))
+            {
+                algorithm_count++;
+            }
+        }
+    }
+
+    if (algorithm_count < 2)
+    {
+        std::cerr << "Error: Need at least 2 valid algorithms for competition, found "
+                  << algorithm_count << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool Simulator::initialize(const Config &config)
+{
+    config_ = config;
+
+    if (!validate_paths())
+    {
+        return false;
+    }
+
+    try
+    {
+        return (config_.mode == Comparative) ? initializeComparativeMode()
+                                             : initializeCompetitionMode();
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Initialization failed: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool Simulator::initializeComparativeMode()
+{
+    if (!loadAlgorithm(config_.algorithm1) || !loadAlgorithm(config_.algorithm2))
+    {
+        return false;
+    }
+
+    bool found_valid_gm = false;
+    for (const auto &entry : fs::directory_iterator(config_.game_managers_folder))
+    {
+        if (entry.path().extension() == ".so" && loadGameManager(entry.path().string()))
+        {
+            found_valid_gm = true;
+        }
+    }
+
+    if (!found_valid_gm)
+    {
+        std::cerr << "Error: No valid game managers found in "
+                  << config_.game_managers_folder << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool Simulator::initializeCompetitionMode()
+{
+    if (!loadGameManager(config_.game_manager))
+    {
+        return false;
+    }
+
+    size_t algorithm_count = 0;
+    for (const auto &entry : fs::directory_iterator(config_.algorithms_folder))
+    {
+        if (entry.path().extension() == ".so" && loadAlgorithm(entry.path().string()))
+        {
+            algorithm_count++;
+        }
+    }
+
+    if (algorithm_count < 2)
+    {
+        std::cerr << "Error: Need at least 2 valid algorithms for competition, found "
+                  << algorithm_count << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool Simulator::loadGameManager(const std::string &path)
+{
+    auto &registrar = GameManagerRegistrar::getGameManagerRegistrar();
+    registrar.createGameManagerEntry(path);
+
+    void *handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+    if (!handle)
+    {
+        std::cerr << "Failed to load GameManager " << path << ": " << dlerror() << std::endl;
+        registrar.removeLast();
+        return false;
+    }
+
+    dlerror(); // Clear errors
+
+    try
+    {
         registrar.validateLastRegistration();
-        std::cout << "Successfully loaded algorithm from " << folderPath << std::endl;
+        std::cout << "Successfully loaded GameManager from " << path << std::endl;
         return true;
-    } catch (const AlgorithmRegistrar::BadRegistrationException& e) {
-        std::cerr << "Bad registration for " << folderPath << ":\n"
+    }
+    catch (const GameManagerRegistrar::BadRegistrationException &e)
+    {
+        std::cerr << "Bad GameManager registration for " << path << ":\n"
+                  << "Has name: " << e.hasName << "\n"
+                  << "Has factory: " << e.hasFactory << std::endl;
+        registrar.removeLast();
+        dlclose(handle);
+        return false;
+    }
+}
+
+bool Simulator::loadAlgorithm(const std::string &path)
+{
+    auto &registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
+    registrar.createAlgorithmFactoryEntry(path);
+
+    void *handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+    if (!handle)
+    {
+        std::cerr << "Failed to load Algorithm " << path << ": " << dlerror() << std::endl;
+        registrar.removeLast();
+        return false;
+    }
+
+    dlerror(); // Clear errors
+
+    try
+    {
+        registrar.validateLastRegistration();
+        std::cout << "Successfully loaded Algorithm from " << path << std::endl;
+        return true;
+    }
+    catch (const AlgorithmRegistrar::BadRegistrationException &e)
+    {
+        std::cerr << "Bad Algorithm registration for " << path << ":\n"
                   << "Has name: " << e.hasName << "\n"
                   << "Has Player factory: " << e.hasPlayerFactory << "\n"
                   << "Has TankAlgorithm factory: " << e.hasTankAlgorithmFactory << std::endl;
@@ -175,7 +372,7 @@ int Simulator::run()
     return runCompetitionMode();
 }
 
-int Simulator::runComparativeMode(){ 
+int Simulator::runComparativeMode(){
     // Get all game manager files
     std::vector<fs::path> game_managers;
     for (const auto& entry : fs::directory_iterator(args.arguments["game_managers_folder"])) {
@@ -192,16 +389,16 @@ int Simulator::runComparativeMode(){
     auto now = std::chrono::system_clock::now();
     auto time_str = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
         now.time_since_epoch()).count());
-    fs::path output_path = fs::path(args.arguments["game_managers_folder"]) / 
+    fs::path output_path = fs::path(args.arguments["game_managers_folder"]) /
                           ("comparative_results_" + time_str + ".txt");
 
     // Try to open output file
     std::ofstream out_file;
     out_file.open(output_path);
     bool write_to_file = out_file.is_open();
-    
+
     if (!write_to_file) {
-        std::cerr << "Error: Could not create output file at " << output_path 
+        std::cerr << "Error: Could not create output file at " << output_path
                   << ". Results will be printed to screen instead.\n\n";
     }
 
@@ -235,7 +432,7 @@ int Simulator::runComparativeMode(){
     // Group results by outcome
     std::unordered_map<std::string, std::vector<std::string>> result_groups;
     for (const auto& result : results) {
-        std::string key = result.final_state + "|" + 
+        std::string key = result.final_state + "|" +
                          std::to_string(result.final_round) + "|" +
                          result.game_result;
         result_groups[key].push_back(result.manager_name);
@@ -261,15 +458,15 @@ int Simulator::runComparativeMode(){
             manager_names << managers[i];
         }
         output << manager_names.str() << "\n";
-        
+
         // Parse and output result details
         size_t pos1 = key.find('|');
         size_t pos2 = key.find('|', pos1 + 1);
         output << key.substr(pos2 + 1) << "\n";  // Game result message
         output << key.substr(pos1 + 1, pos2 - pos1 - 1) << "\n";  // Round number
-        
+
         // Output final game state (from first manager in group)
-        auto sample_result = std::find_if(results.begin(), results.end(), 
+        auto sample_result = std::find_if(results.begin(), results.end(),
             [&](const GameResult& r) { return r.manager_name == managers[0]; });
         if (sample_result != results.end()) {
             output << sample_result->final_state << "\n";

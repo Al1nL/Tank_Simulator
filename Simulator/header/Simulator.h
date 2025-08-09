@@ -11,13 +11,9 @@
 #include <algorithm>
 #include <fstream>
 #include <future>
-
-struct ProgramArguments {
-    std::string mode;  // "-comparative" or "-competition"
-    std::unordered_map<std::string, std::string> arguments;
-    int num_threads = 1;
-    bool verbose = false;
-};
+#include "../header/AlgorithmRegistrar.h"
+#include "../header/GameManagerRegistrar.h"
+namespace fs = std::filesystem;
 
 struct GameResult {
     std::string manager_name;
@@ -25,34 +21,56 @@ struct GameResult {
     int final_round;
     std::string game_result;  // e.g., "Player 1 won by elimination"
 };
-class Simulator{
-    ProgramArguments args;
+
+class Simulator
+{
   typedef void (*plugin_init_func)();
-  bool loadAlgorithm(const std::string& folderPath);
+public:
+  enum Mode
+  {
+    Comparative,
+    Competition
+  };
 
+  struct Config
+  {
+    Mode mode;
+    std::string game_map;
+    std::string game_maps_folder;
+    std::string game_managers_folder;
+    std::string algorithms_folder;
+    std::string algorithm1;
+    std::string algorithm2;
+    std::string game_manager;
+    int num_threads = 1;
+    bool verbose = false;
+  };
 
+  Simulator() {};
+  Simulator(Simulator const &) = delete;
+  Simulator &operator=(const Simulator &) = delete;
+  ~Simulator() {}
+  bool initGame(const std::vector<std::string> &folderPath);
+  void run();
 
+private:
+  Config config_;
 
-    void printUsage(const std::string& error_msg = "", const std::vector<std::string>& invalid_args = {});
-    int runComparativeMode();
-    int runCompetitionMode();
-    ProgramArguments parseArguments(int argc, char* argv[]);
+  bool loadAllFromDirectory(const std::string &dirPath, bool isGameManager);
 
-  public:
-    Simulator(int argc, char* argv[])
-    {
-        args = parseArguments(argc, argv);
-    };
+  // Initialization helpers
+  bool validate_paths() const;
+  bool initialize(const Config &config);
+  bool initializeComparativeMode();
+  bool initializeCompetitionMode();
+  // Dynamic loading functions
+  bool loadAlgorithm(const std::string &path);
+  bool loadGameManager(const std::string &path);
 
-    Simulator(Simulator const&) = delete;
-    Simulator& operator=(const Simulator&) = delete;
-    ~Simulator() {}
-    bool initGame(const std::string& folderPath);
-
-    int run();
-
+  // Mode-specific execution
+  void runComparative();
+  void runCompetition();
+  std::string generateOutputFilename(const std::string &folder, const std::string &prefix);
 };
 
-
-
-#endif //SIMULATOR_H
+#endif // SIMULATOR_H

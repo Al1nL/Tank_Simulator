@@ -2,25 +2,27 @@
 #define MINE_H
 #include "GameObject.h"
 using std::pair;
-
-class Mine : public GameObject
+namespace UserCommon__212535058_324022904
 {
-private:
-    bool triggered = false;
-    bool destroyed = false;
-    static const char MINE_SYMBOL = '@'; // Assuming this is the intended symbol
+    class Mine : public GameObject
+    {
+    private:
+        bool triggered = false;
+        bool destroyed = false;
+        static const char MINE_SYMBOL = '@'; // Assuming this is the intended symbol
 
-public:
-    Mine(pair<int, int> pos);
-    ~Mine() override = default;
+    public:
+        Mine(pair<int, int> pos);
+        ~Mine() override = default;
 
-    Mine(Mine const &) = delete;
-    Mine &operator=(const Mine &) = delete;
+        Mine(Mine const &) = delete;
+        Mine &operator=(const Mine &) = delete;
 
-    void trigger();
-    bool isTriggered() const;
-    void destroy() override;
-    bool isDestroyed() const override;
-    char getSymbol() const override;
-};
+        void trigger();
+        bool isTriggered() const;
+        void destroy() override;
+        bool isDestroyed() const override;
+        char getSymbol() const override;
+    };
+}
 #endif // MINE_H

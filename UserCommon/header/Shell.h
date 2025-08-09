@@ -2,33 +2,35 @@
 #define SHELL_H
 #include "GameObject.h"
 using std::pair;
-
-class Shell : public GameObject
+namespace UserCommon__212535058_324022904
 {
-    Direction direction;
-    int ownerId;
-    bool destroyed;
-    static const char SHELL_SYMBOL = '*';
+    class Shell : public GameObject
+    {
+        Direction direction;
+        int ownerId;
+        bool destroyed;
+        static const char SHELL_SYMBOL = '*';
 
-public:
-    // Constructor
-    Shell(pair<int, int> pos, Direction dir, int owner);
-    ~Shell() override = default;
+    public:
+        // Constructor
+        Shell(pair<int, int> pos, Direction dir, int owner);
+        ~Shell() override = default;
 
-    Shell(Shell const &) = delete;
-    Shell &operator=(const Shell &) = delete;
+        Shell(Shell const &) = delete;
+        Shell &operator=(const Shell &) = delete;
 
-    // Accessors
-    Direction getDirection() const;
-    void setDirection(Direction dir);
+        // Accessors
+        Direction getDirection() const;
+        void setDirection(Direction dir);
 
-    int getOwnerId() const;
-    bool isDestroyed() const override;
+        int getOwnerId() const;
+        bool isDestroyed() const override;
 
-    // Mutators
-    void destroy() override;
+        // Mutators
+        void destroy() override;
 
-    // Symbol for representation on the board
-    char getSymbol() const override;
-};
+        // Symbol for representation on the board
+        char getSymbol() const override;
+    };
+}
 #endif // SHELL_H
