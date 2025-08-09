@@ -13,38 +13,29 @@
 #include <future>
 #include "../header/AlgorithmRegistrar.h"
 #include "../header/GameManagerRegistrar.h"
-namespace fs = std::filesystem;
+#include "../header/MapReader.h"
 
-struct GameResult {
-    std::string manager_name;
-    std::string final_state;
-    int final_round;
-    std::string game_result;  // e.g., "Player 1 won by elimination"
+namespace fs = std::filesystem;
+class GameResult;
+
+enum Mode
+  {
+    Comparative,
+    Competition
+  };
+
+
+struct Config {
+  Mode mode;  // "-comparative" or "-competition"
+  std::unordered_map<std::string, std::string> arguments;
+  int num_threads = 1;
+  bool verbose = false;
 };
 
 class Simulator
 {
   typedef void (*plugin_init_func)();
 public:
-  enum Mode
-  {
-    Comparative,
-    Competition
-  };
-
-  struct Config
-  {
-    Mode mode;
-    std::string game_map;
-    std::string game_maps_folder;
-    std::string game_managers_folder;
-    std::string algorithms_folder;
-    std::string algorithm1;
-    std::string algorithm2;
-    std::string game_manager;
-    int num_threads = 1;
-    bool verbose = false;
-  };
 
   Simulator() {};
   Simulator(Simulator const &) = delete;
@@ -55,22 +46,30 @@ public:
 
 private:
   Config config_;
+  vector<GameMapInfo> mapInfo_;
 
   bool loadAllFromDirectory(const std::string &dirPath, bool isGameManager);
 
   // Initialization helpers
-  bool validate_paths() const;
   bool initialize(const Config &config);
   bool initializeComparativeMode();
   bool initializeCompetitionMode();
   // Dynamic loading functions
   bool loadAlgorithm(const std::string &path);
   bool loadGameManager(const std::string &path);
+  bool loadAllMaps(const std::string &path);
 
   // Mode-specific execution
   void runComparative();
   void runCompetition();
+
+  void printUsage(const std::string& error_msg = "", const std::vector<std::string>& invalid_args = {});
+  Config parseArguments(int argc, char* argv[]);
   std::string generateOutputFilename(const std::string &folder, const std::string &prefix);
+  std::string getBaseName(const std::string& filename);
+
+  //mode helper functions
+  GameResult runSingleComparativeGame(int manager_num,const fs::path& manager_path);
 };
 
 #endif // SIMULATOR_H

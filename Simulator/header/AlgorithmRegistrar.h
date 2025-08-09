@@ -34,6 +34,11 @@ class AlgorithmRegistrar {
             bool hasTankAlgorithmFactory() const {
                 return tankAlgorithmFactory != nullptr;
             }
+
+            TankAlgorithmFactory getTankAlgorithmFactory() const
+            {
+                return tankAlgorithmFactory;
+            }
         };
 
 
@@ -77,5 +82,10 @@ public:
     }
     std::size_t count() const { return algorithms.size(); }
     void clear() { algorithms.clear(); }
+
+    AlgorithmAndPlayerFactories getAlgorithmAndPlayerFactory(int algo) const
+    {
+        return algorithms.at(algo);
+    }
 };
 #endif //ALGORITHMREGISTRAR_H

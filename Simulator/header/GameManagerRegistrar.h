@@ -39,6 +39,11 @@ class GameManagerRegistrar {
         void* getHandle() const {
             return library_handle;
         }
+
+        GameManagerFactory getFactory() const
+        {
+            return factory;
+        }
     };
 
     std::vector<GameManagerEntry> game_managers;
@@ -109,6 +114,12 @@ public:
             }
         }
         game_managers.clear();
+    }
+
+    GameManagerEntry getGameManager(int i) const
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        return game_managers.at(i);
     }
 };
 

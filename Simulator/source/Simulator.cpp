@@ -1,6 +1,8 @@
 #include "../header/Simulator.h"
 #include "../header/AlgorithmRegistrar.h"
 #include "../header/ThreadPool.h"
+#include "../../common/GameResult.h"
+#include "../header/MapReader.h"
 
 namespace fs = std::filesystem;
 
@@ -10,45 +12,22 @@ bool Simulator::initGame(const std::vector<std::string> &folderPath)
     // TODO:need to use initialize() to set up the config from the args given.
 }
 
-bool Simulator::initialize(const Config &config)
-{
-    config_ = config;
-
-    // Validate all paths first
-    if (!validate_paths())
-    {
-        return false;
-    }
-    try
-    {
-        // Load required libraries based on mode
-        if (config_.mode == Comparative)
-        {
-            return initializeComparativeMode();
-        }
-        else
-        {
-            return initializeCompetitionMode();
-        }
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Initialization failed: " << e.what() << std::endl;
-        return false;
-    }
-}
-
 bool Simulator::initializeComparativeMode()
 {
+
     // Load the two algorithms
-    if (!loadAlgorithm(config_.algorithm1) || !loadAlgorithm(config_.algorithm2))
+    if (!loadAlgorithm(config_.arguments["algorithm1"]) || !loadAlgorithm(config_.arguments["algorithm2"]))
     {
         return false;
     }
 
+    if (!loadAllMaps(config_.arguments["game_map"]))
+    {
+        return false;
+    }
     // Load all game managers from the folder
     bool found_valid_gm = false;
-    for (const auto &entry : fs::directory_iterator(config_.game_managers_folder))
+    for (const auto &entry : fs::directory_iterator(config_.arguments["game_managers_folder"]))
     {
         if (entry.path().extension() == ".so")
         {
@@ -62,7 +41,7 @@ bool Simulator::initializeComparativeMode()
     if (!found_valid_gm)
     {
         std::cerr << "Error: No valid game managers found in "
-                  << config_.game_managers_folder << std::endl;
+                  << config_.arguments["game_managers_folder"] << std::endl;
         return false;
     }
 
@@ -72,14 +51,14 @@ bool Simulator::initializeComparativeMode()
 bool Simulator::initializeCompetitionMode()
 {
     // Load the game manager
-    if (!loadGameManager(config_.game_manager))
+    if (!loadGameManager(config_.arguments["game_manager"]))
     {
         return false;
     }
 
     // Load all algorithms from the folder
     size_t algorithm_count = 0;
-    for (const auto &entry : fs::directory_iterator(config_.algorithms_folder))
+    for (const auto &entry : fs::directory_iterator(config_.arguments["algorithms_folder"]))
     {
         if (entry.path().extension() == ".so")
         {
@@ -104,11 +83,6 @@ bool Simulator::initialize(const Config &config)
 {
     config_ = config;
 
-    if (!validate_paths())
-    {
-        return false;
-    }
-
     try
     {
         return (config_.mode == Comparative) ? initializeComparativeMode()
@@ -121,60 +95,10 @@ bool Simulator::initialize(const Config &config)
     }
 }
 
-bool Simulator::initializeComparativeMode()
-{
-    if (!loadAlgorithm(config_.algorithm1) || !loadAlgorithm(config_.algorithm2))
-    {
-        return false;
-    }
-
-    bool found_valid_gm = false;
-    for (const auto &entry : fs::directory_iterator(config_.game_managers_folder))
-    {
-        if (entry.path().extension() == ".so" && loadGameManager(entry.path().string()))
-        {
-            found_valid_gm = true;
-        }
-    }
-
-    if (!found_valid_gm)
-    {
-        std::cerr << "Error: No valid game managers found in "
-                  << config_.game_managers_folder << std::endl;
-        return false;
-    }
-    return true;
-}
-
-bool Simulator::initializeCompetitionMode()
-{
-    if (!loadGameManager(config_.game_manager))
-    {
-        return false;
-    }
-
-    size_t algorithm_count = 0;
-    for (const auto &entry : fs::directory_iterator(config_.algorithms_folder))
-    {
-        if (entry.path().extension() == ".so" && loadAlgorithm(entry.path().string()))
-        {
-            algorithm_count++;
-        }
-    }
-
-    if (algorithm_count < 2)
-    {
-        std::cerr << "Error: Need at least 2 valid algorithms for competition, found "
-                  << algorithm_count << std::endl;
-        return false;
-    }
-    return true;
-}
-
 bool Simulator::loadGameManager(const std::string &path)
 {
     auto &registrar = GameManagerRegistrar::getGameManagerRegistrar();
-    registrar.createGameManagerEntry(path);
+    registrar.createGameManagerEntry(getBaseName(path));
 
     void *handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
     if (!handle)
@@ -190,6 +114,7 @@ bool Simulator::loadGameManager(const std::string &path)
     {
         registrar.validateLastRegistration();
         std::cout << "Successfully loaded GameManager from " << path << std::endl;
+
         return true;
     }
     catch (const GameManagerRegistrar::BadRegistrationException &e)
@@ -206,7 +131,8 @@ bool Simulator::loadGameManager(const std::string &path)
 bool Simulator::loadAlgorithm(const std::string &path)
 {
     auto &registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
-    registrar.createAlgorithmFactoryEntry(path);
+
+    registrar.createAlgorithmFactoryEntry(getBaseName(path));
 
     void *handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
     if (!handle)
@@ -236,8 +162,32 @@ bool Simulator::loadAlgorithm(const std::string &path)
     }
 }
 
-ProgramArguments Simulator::parseArguments(int argc, char* argv[]) {
-    ProgramArguments args;
+bool Simulator::loadAllMaps(const std::string &path)
+{
+    MapReader reader;
+    if (!fs::is_directory(path))
+    {
+        auto& map = reader.readBoard(path);
+        if (!map.map) return false;
+        map.name = path;
+        mapInfo_.push_back(map);
+    }
+    for (const auto& entry : fs::directory_iterator(path))
+    {
+        if (entry.path().extension() == ".txt")
+        {
+            auto& map = reader.readBoard(path);
+            if (!map.map) return false;
+            map.name = entry.path().filename().string();
+            mapInfo_.push_back(map);
+        }
+    }
+
+    return true;
+}
+
+Config Simulator::parseArguments(int argc, char* argv[]) {
+    Config args;
     std::vector<std::string> invalid_args;
     std::vector<std::string> required_args;
 
@@ -246,15 +196,17 @@ ProgramArguments Simulator::parseArguments(int argc, char* argv[]) {
     }
 
     // Check mode
-    args.mode = argv[1];
-    if (args.mode != "-comparative" && args.mode != "-competition") {
-        printUsage("Invalid mode specified", {args.mode});
+    string mode = argv[1];
+    if (mode != "-comparative" && mode != "-competition") {
+        printUsage("Invalid mode specified", {mode});
     }
 
     // Set required arguments based on mode
-    if (args.mode == "-comparative") {
+    if (mode == "-comparative") {
+        args.mode = Comparative;
         required_args = {"game_map", "game_managers_folder", "algorithm1", "algorithm2"};
     } else {
+        args.mode = Competition;
         required_args = {"game_maps_folder", "game_manager", "algorithms_folder"};
     }
 
@@ -310,7 +262,7 @@ ProgramArguments Simulator::parseArguments(int argc, char* argv[]) {
 
     // Validate file paths
     try {
-        if (args.mode == "-comparative") {
+        if (args.mode == Comparative) {
             if (!fs::exists(args.arguments["game_map"])) {
                 printUsage("Game map file does not exist");
             }
@@ -364,32 +316,22 @@ void Simulator::printUsage(const std::string& error_msg,
     exit(1);
 }
 
-int Simulator::run()
+void Simulator::run()
 {
-    if (args.mode == "-comparative") {
-        return runComparativeMode();
+    if (config_.mode == Comparative) {
+        runComparative();
     }
-    return runCompetitionMode();
+    runCompetition();
 }
 
-int Simulator::runComparativeMode(){
-    // Get all game manager files
-    std::vector<fs::path> game_managers;
-    for (const auto& entry : fs::directory_iterator(args.arguments["game_managers_folder"])) {
-        if (entry.path().extension() == ".so") {
-            game_managers.push_back(entry.path());
-        }
-    }
+void Simulator::runComparative(){
 
-    if (game_managers.empty()) {
-        throw std::runtime_error("No game manager files found in directory");
-    }
 
     // Prepare output filename with timestamp
     auto now = std::chrono::system_clock::now();
     auto time_str = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
         now.time_since_epoch()).count());
-    fs::path output_path = fs::path(args.arguments["game_managers_folder"]) /
+    fs::path output_path = fs::path(config_.arguments["game_managers_folder"]) /
                           ("comparative_results_" + time_str + ".txt");
 
     // Try to open output file
@@ -404,26 +346,23 @@ int Simulator::runComparativeMode(){
 
     // Write header information
     auto& output = write_to_file ? out_file : std::cout;
-    output << "game_map=" << args.arguments["game_map"] << "\n";
-    output << "algorithm1=" << args.arguments["algorithm1"] << "\n";
-    output << "algorithm2=" << args.arguments["algorithm2"] << "\n\n";
+    output << "game_map=" << config_.arguments["game_map"] << "\n";
+    output << "algorithm1=" << config_.arguments["algorithm1"] << "\n";
+    output << "algorithm2=" << config_.arguments["algorithm2"] << "\n\n";
 
-    //todo: Load algorithms --change
-    auto algo1 = loadAlgorithm(args.arguments["algorithm1"]);
-    auto algo2 = loadAlgorithm(args.arguments["algorithm2"]);
+    // //todo: Load algorithms --change
+    // auto algo1 = loadAlgorithm(config_.arguments["algorithm1"]);
+    // auto algo2 = loadAlgorithm(config_.arguments["algorithm2"]);
 
     // Process game managers in parallel
     std::vector<GameResult> results;
     std::mutex results_mutex;
-    auto worker = [&](const fs::path& manager_path) {
-        GameManager manager(manager_path.string());
-        GameResult result = manager.runGame(args.arguments["game_map"], algo1, algo2);
-        std::lock_guard<std::mutex> lock(results_mutex);
-        results.push_back(result);
-    };
+
+    //todo: change here and add use to runSingleComparativeGame
+
 
     // Create thread pool
-    ThreadPool pool(args.num_threads);
+    ThreadPool pool(config_.num_threads);
     for (const auto& manager : game_managers) {
         pool.enqueue(worker, manager);
     }
@@ -489,4 +428,57 @@ int Simulator::runComparativeMode(){
     }
 }
 
-int Simulator::runCompetitionMode(){ return 0; }
+void Simulator::runCompetition(){ return; }
+
+std::string Simulator::getBaseName(const std::string& filename) {
+    // Find the last '.' in the string
+    size_t last_dot = filename.find_last_of('.');
+
+    // If no extension found, return the whole string
+    if (last_dot == std::string::npos) {
+        return filename;
+    }
+
+    // Return substring up to (but not including) the last '.'
+    return filename.substr(0, last_dot);
+}
+
+GameResult Simulator::runSingleComparativeGame(int manager_number,const fs::path& manager_path)
+{
+    try {
+        auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
+        auto algo1_player_factory = algo_registrar.getAlgorithmAndPlayerFactory(0);
+        auto algo2_player_factory = algo_registrar.getAlgorithmAndPlayerFactory(1);
+
+        auto& gm_registrar = GameManagerRegistrar::getGameManagerRegistrar();
+
+        auto game_manager_factory = gm_registrar.getGameManager(manager_number).getFactory();
+        // if (!game_manager) {
+        //     throw std::runtime_error("Failed to create game manager");
+        // }
+        if (!game_manager_factory)
+        {
+            return {};
+        }
+
+        auto game_manager = game_manager_factory(config_.verbose);
+        if (!game_manager) {
+            return {};
+        }
+
+        auto& map = mapInfo_.at(0);
+        auto player1 = algo1_player_factory.createPlayer(1,map.height, map.width,map.max_steps,map.num_shells);
+        auto player2 = algo2_player_factory.createPlayer(2,map.height, map.width,map.max_steps,map.num_shells);
+        // Run the game
+        GameResult result = game_manager->run(map.width, map.height,
+           *map.map, map.name,map.max_steps,map.num_shells,
+            *player1,"",*player2,"",
+            algo1_player_factory.getTankAlgorithmFactory(),algo2_player_factory.getTankAlgorithmFactory()
+        );
+
+
+    } catch (const std::exception& e) {
+        return {};
+    }
+
+}
