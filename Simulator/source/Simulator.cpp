@@ -350,78 +350,38 @@ void Simulator::runComparative(){
     output << "algorithm1=" << config_.arguments["algorithm1"] << "\n";
     output << "algorithm2=" << config_.arguments["algorithm2"] << "\n\n";
 
-    // //todo: Load algorithms --change
-    // auto algo1 = loadAlgorithm(config_.arguments["algorithm1"]);
-    // auto algo2 = loadAlgorithm(config_.arguments["algorithm2"]);
-
     // Process game managers in parallel
-    std::vector<GameResult> results;
+    std::vector<std::pair<size_t, GameResult>> results;
     std::mutex results_mutex;
-
-    //todo: change here and add use to runSingleComparativeGame
-
 
     // Create thread pool
     ThreadPool pool(config_.num_threads);
-    for (const auto& manager : game_managers) {
-        pool.enqueue(worker, manager);
+
+    // Get the number of loaded game managers
+    auto& gm_registrar = GameManagerRegistrar::getGameManagerRegistrar();
+    size_t num_managers = gm_registrar.count();
+
+    for (size_t i = 0; i < num_managers; ++i) {
+        pool.enqueue([this, i, &results, &results_mutex]() {
+            GameResult result = runSingleComparativeGame(i);
+            if (result.gameState) {  // Only add valid results
+                std::lock_guard<std::mutex> lock(results_mutex);
+                results.emplace_back(std::make_pair(i, std::move(result)));  // Store manager index with result
+            }
+        });
     }
     pool.waitAll();
 
     // Group results by outcome
     std::unordered_map<std::string, std::vector<std::string>> result_groups;
-    for (const auto& result : results) {
-        std::string key = result.final_state + "|" +
-                         std::to_string(result.final_round) + "|" +
-                         result.game_result;
-        result_groups[key].push_back(result.manager_name);
+    for (const auto& [manager_idx, result] : results) {
+        std::string key = std::to_string(result.winner) + "|" +
+                         std::to_string(static_cast<int>(result.reason)) + "|" +
+                         std::to_string(result.rounds);
+        result_groups[key].push_back(gm_registrar.getGameManager(manager_idx).getName());
     }
 
-    // Output grouped results
-    std::unordered_set<std::string> processed_managers;
-    for (const auto& [key, managers] : result_groups) {
-        // Skip if all managers already processed
-        bool all_processed = true;
-        for (const auto& mgr : managers) {
-            if (!processed_managers.count(mgr)) {
-                all_processed = false;
-                break;
-            }
-        }
-        if (all_processed) continue;
-
-        // Output manager names with same result
-        std::ostringstream manager_names;
-        for (size_t i = 0; i < managers.size(); ++i) {
-            if (i != 0) manager_names << ", ";
-            manager_names << managers[i];
-        }
-        output << manager_names.str() << "\n";
-
-        // Parse and output result details
-        size_t pos1 = key.find('|');
-        size_t pos2 = key.find('|', pos1 + 1);
-        output << key.substr(pos2 + 1) << "\n";  // Game result message
-        output << key.substr(pos1 + 1, pos2 - pos1 - 1) << "\n";  // Round number
-
-        // Output final game state (from first manager in group)
-        auto sample_result = std::find_if(results.begin(), results.end(),
-            [&](const GameResult& r) { return r.manager_name == managers[0]; });
-        if (sample_result != results.end()) {
-            output << sample_result->final_state << "\n";
-        }
-
-        // Mark managers as processed
-        for (const auto& mgr : managers) {
-            processed_managers.insert(mgr);
-        }
-
-        // Add separator if more groups remain
-        if (processed_managers.size() < game_managers.size()) {
-            output << "\n";
-        }
-    }
-
+    logResults(result_groups, std::move(out_file));
     if (write_to_file) {
         out_file.close();
         std::cout << "Results written to: " << output_path << "\n";
@@ -443,7 +403,7 @@ std::string Simulator::getBaseName(const std::string& filename) {
     return filename.substr(0, last_dot);
 }
 
-GameResult Simulator::runSingleComparativeGame(int manager_number,const fs::path& manager_path)
+GameResult Simulator::runSingleComparativeGame(int manager_number)
 {
     try {
         auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
@@ -480,5 +440,39 @@ GameResult Simulator::runSingleComparativeGame(int manager_number,const fs::path
     } catch (const std::exception& e) {
         return {};
     }
+
+}
+
+void Simulator::logResults(std::unordered_map<std::string, std::vector<std::string>> results, std::ofstream output)
+{
+    // Output results
+    for (const auto& [key, managers] : results) {
+        // Parse key components
+        size_t pos1 = key.find('|');
+        size_t pos2 = key.find('|', pos1 + 1);
+
+        int winner = std::stoi(key.substr(0, pos1));
+        GameResult::Reason reason = static_cast<GameResult::Reason>(std::stoi(key.substr(pos1 + 1, pos2 - pos1 - 1)));
+        size_t rounds = std::stoi(key.substr(pos2 + 1));
+
+        // Output manager names
+        for (size_t i = 0; i < managers.size(); ++i) {
+            if (i != 0) output << ", ";
+            output << managers[i];
+        }
+        output << "\n";
+
+        // Output result details
+        output << "Winner: " << (winner == 0 ? "Tie" : ("Player " + std::to_string(winner))) << "\n";
+        output << "Reason: ";
+        switch (reason) {
+        case GameResult::ALL_TANKS_DEAD: output << "All tanks destroyed"; break;
+        case GameResult::MAX_STEPS: output << "Maximum steps reached"; break;
+        case GameResult::ZERO_SHELLS: output << "No shells remaining"; break;
+        }
+        output << "\n";
+        output << "Rounds: " << rounds << "\n\n";
+    }
+
 
 }

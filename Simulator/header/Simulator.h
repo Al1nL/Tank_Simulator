@@ -67,9 +67,10 @@ private:
   Config parseArguments(int argc, char* argv[]);
   std::string generateOutputFilename(const std::string &folder, const std::string &prefix);
   std::string getBaseName(const std::string& filename);
+  void logResults(std::unordered_map<std::string, std::vector<std::string>>, std::ofstream);
 
   //mode helper functions
-  GameResult runSingleComparativeGame(int manager_num,const fs::path& manager_path);
+  GameResult runSingleComparativeGame(int manager_num);
 };
 
 #endif // SIMULATOR_H

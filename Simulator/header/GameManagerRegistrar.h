@@ -44,6 +44,11 @@ class GameManagerRegistrar {
         {
             return factory;
         }
+
+        string getName() const
+        {
+            return so_name;
+        }
     };
 
     std::vector<GameManagerEntry> game_managers;
