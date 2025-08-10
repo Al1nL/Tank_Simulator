@@ -1,0 +1,12 @@
+Test Map 6 - Flanking Opportunities
+MaxSteps=1000
+NumShells = 15
+Rows = 6
+Cols = 20
+####################
+#1   #   @     #  2#
+# ## # ##### ## #  #
+# 2    @     1     #
+#  @  ### ##   # 2 #
+#1        @     1  #
+####################

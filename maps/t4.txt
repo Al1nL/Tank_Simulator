@@ -1,0 +1,11 @@
+Test Map 4 - Four tanks total, direct engagement
+MaxSteps = 500
+NumShells = 8
+Rows = 5
+Cols = 15
+###############
+# 1     @     2#
+#   1  ###  2  #
+# @     #     @#
+###############
+#             #

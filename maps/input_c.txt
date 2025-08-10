@@ -1,0 +1,12 @@
+2-Tie With 4 Tanks
+MaxSteps=100
+NumShells=5
+Rows=6
+Cols=12
+############
+# 1   @   2#
+#   @   @  #
+# 1   @   2#
+#   @   @  #
+#          #
+############

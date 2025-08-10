@@ -1,0 +1,10 @@
+Test Map 2 - Asymmetric Maze
+MaxSteps=300
+NumShells=10
+Rows=5
+Cols=9
+#########
+#1     @#
+# ### # #
+#   2   #
+#########
