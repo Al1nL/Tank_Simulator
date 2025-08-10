@@ -6,7 +6,7 @@ using namespace UserCommon__212535058_324022904;
  * @param filePath Path to the input file.
  * @throws invalid_argument if the input file cannot be opened.
  */
-GameMapInfo& MapReader::readBoard(const string &filePath)
+GameMapInfo MapReader::readBoard(const string &filePath)
 {
 	ifstream file(filePath);
 	if (!file)
@@ -165,7 +165,7 @@ void MapReader::processMapRows(ifstream &file, bool &hasErrors, ofstream &errorL
 	}
 
 	checkExcessRows(file, hasErrors, errorLog);
-    map_info.map = make_unique<BoardSatelliteView>(map_info.height, map_info.width, map);
+    map_info.map = std::make_unique<BoardSatelliteView>(map_info.height, map_info.width, map);
 }
 
 /**

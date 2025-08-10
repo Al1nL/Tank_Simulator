@@ -28,6 +28,9 @@ struct GameMapInfo {
   // Disable copying
   GameMapInfo(const GameMapInfo&) = delete;
   GameMapInfo& operator=(const GameMapInfo&) = delete;
+
+  GameMapInfo(GameMapInfo&&) = default;
+    GameMapInfo& operator=(GameMapInfo&&) = default;
 };
 
 class MapReader{
@@ -40,6 +43,6 @@ class MapReader{
   void checkExcessRows(ifstream &file, bool &hasErrors, ofstream &errorLog);
   void processRowCells(const string &line, size_t row, vector<vector<char>> &map, bool &hasErrors, ofstream &errorLog);
   public:
-  GameMapInfo& readBoard(const string &filePath);
+  GameMapInfo readBoard(const string &filePath);
   };
 #endif //MAPREADER_H
