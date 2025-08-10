@@ -42,6 +42,7 @@ public:
   Simulator &operator=(const Simulator &) = delete;
   ~Simulator() {}
   bool initGame(const std::vector<std::string> &folderPath);
+  bool initGame_(int argc, char* argv[]);
   void run();
 
 private:
@@ -67,7 +68,7 @@ private:
   Config parseArguments(int argc, char* argv[]);
   std::string generateOutputFilename(const std::string &folder, const std::string &prefix);
   std::string getBaseName(const std::string& filename);
-  void logResults(std::unordered_map<std::string, std::vector<std::string>>, std::ofstream);
+  void logResults(std::unordered_map<std::string, std::vector<std::string>>, std::ofstream&);
 
   //mode helper functions
   GameResult runSingleComparativeGame(int manager_num);
