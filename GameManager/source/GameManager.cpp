@@ -25,17 +25,15 @@ namespace GameManager_212535058_324022904
         steps_since_no_shells = 0;
         output_file = "output_P1_" + name1 + "_P2_" + name2 + "_Map_" + map_name + ".txt";
         // Initialize board and tanks
-        players.push_back(unique_ptr<Player>(&player1));
-        players.push_back(unique_ptr<Player>(&player2));
+        players.push_back(&player1);
+        players.push_back(&player2);
         initializeBoard(map);
         initializeTanks(player1_tank_algo_factory, player2_tank_algo_factory);
     if (verbose) {
-        std::cout << "Starting game between " << name1 << " and " << name2 << endl;
     }
         // Main game loop
         while (!isGameOver())
         {
-            std::cout << "Round " << current_step + 1 << ": "<< endl;
 
             processRound();
             board_view->update(board->objMapToCharMap());
@@ -52,10 +50,6 @@ namespace GameManager_212535058_324022904
             }
         }
         auto result = prepareResult();
-         if (verbose) {
-        std::cout << "Game ended - winner: " << result.winner 
-             << ", reason: " << static_cast<int>(result.reason) << endl;
-    }
         return result;
     }
 
@@ -78,6 +72,7 @@ namespace GameManager_212535058_324022904
                 {
                     int player_id = cell - '0';
                     player_tank_count[player_id]++;
+                    player_tanks_pos[player_id].emplace_back(pos);
                     auto tank = make_unique<Tank>(
                         pos,
                         player_tank_count[player_id] - 1,
@@ -141,8 +136,8 @@ namespace GameManager_212535058_324022904
         }       
         // Apply moves and update game state
         board->applyMoves(actionRequests);
+
         updateTanksInfo(tanks);
-        cerr << "updated " << current_step + 1 << ":\n";
 
         board->boardCleanup();
     }
@@ -155,8 +150,6 @@ namespace GameManager_212535058_324022904
         result.remaining_tanks.push_back(p1_tanks);
         result.remaining_tanks.push_back(p2_tanks);
 
-        result.rounds = current_step;
-        result.gameState = make_unique<BoardSatelliteView>(rows, cols, board->objMapToCharMap());
 
         if (p1_tanks == 0 && p2_tanks == 0)
         {
@@ -239,9 +232,11 @@ namespace GameManager_212535058_324022904
 
                    //TankAlgorithm* algo = findTankAlgorithmById(tank);
                    if (!algo) continue;
-            cerr << "Updating tank " << tank->getId() << " for player " << player_id << endl;
             // Update position
+            //cerr << "New position: " << tank->getPos().first << ", " << tank->getPos().second << endl;
             player_tanks_pos[player_id][tank_idx] = tank->getPos(); //נופל פה
+            //cerr << "Player " << player_id << " tank " << tank_idx << " position updated." << endl;
+
             // Update shell count if tank shot
             if (tank->getLastAction() == ActionRequest::Shoot)
             {
@@ -253,8 +248,8 @@ namespace GameManager_212535058_324022904
                 dynamic_cast<BoardSatelliteView *>(board_view.get())->setRequestingTankPos(tank->getPos());
                 Player &player = (player_id == 1) ? *players[0] : *players[1];
                 player.updateTankWithBattleInfo(*algo, *board_view);
+
             }
         }
-        cerr << "Tanks info updated for all tanks." << endl;
     }
 }

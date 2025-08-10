@@ -55,7 +55,7 @@ TankAlgorithmFactory player2_tank_algo_factory) override;
         std::map<int, int> player_shell_count = {{1, 0}, {2, 0}};
         std::map<int, std::map<int, std::unique_ptr<TankAlgorithm>>> player_tanks_algo;
         std::map<int, std::vector<std::pair<int, int>>> player_tanks_pos;
-        vector<unique_ptr<Player>> players;
+        std::vector<Player*> players;
 
         // Private methods
 
