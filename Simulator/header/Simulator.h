@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <fstream>
 #include <future>
+#include <cmath> 
 #include "../header/AlgorithmRegistrar.h"
 #include "../header/GameManagerRegistrar.h"
 #include "../header/MapReader.h"
@@ -55,6 +56,8 @@ private:
   bool initialize(const Config &config);
   bool initializeComparativeMode();
   bool initializeCompetitionMode();
+  int computeThreadCount() const;
+
   // Dynamic loading functions
   bool loadAlgorithm(const std::string &path);
   bool loadGameManager(const std::string &path);
@@ -72,6 +75,7 @@ private:
 
   //mode helper functions
   GameResult runSingleComparativeGame(int manager_num);
+  GameResult runSingleCompetitionGame(size_t map_idx, size_t algo1_idx, size_t algo2_idx);
 };
 
 #endif // SIMULATOR_H
