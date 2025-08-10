@@ -29,10 +29,14 @@ namespace GameManager_212535058_324022904
         players.push_back(unique_ptr<Player>(&player2));
         initializeBoard(map);
         initializeTanks(player1_tank_algo_factory, player2_tank_algo_factory);
-
+    if (verbose) {
+        std::cout << "Starting game between " << name1 << " and " << name2 << endl;
+    }
         // Main game loop
         while (!isGameOver())
         {
+            std::cout << "Round " << current_step + 1 << ": "<< endl;
+
             processRound();
             board_view->update(board->objMapToCharMap());
 
@@ -47,8 +51,12 @@ namespace GameManager_212535058_324022904
                 ++steps_since_no_shells;
             }
         }
-
-        return prepareResult();
+        auto result = prepareResult();
+         if (verbose) {
+        std::cout << "Game ended - winner: " << result.winner 
+             << ", reason: " << static_cast<int>(result.reason) << endl;
+    }
+        return result;
     }
 
     void GameManager::initializeBoard(const SatelliteView &map)
@@ -130,11 +138,12 @@ namespace GameManager_212535058_324022904
             {
                 actionRequests[tank] = algo->getAction();
             }
-        }
-
+        }       
         // Apply moves and update game state
         board->applyMoves(actionRequests);
         updateTanksInfo(tanks);
+        cerr << "updated " << current_step + 1 << ":\n";
+
         board->boardCleanup();
     }
 
@@ -228,18 +237,16 @@ namespace GameManager_212535058_324022904
                 continue;
             TankAlgorithm *algo = player_tanks_algo[player_id][tank_idx].get();
 
-            //        TankAlgorithm* algo = findTankAlgorithmById(tank);
-            //        if (!algo) continue;
-
+                   //TankAlgorithm* algo = findTankAlgorithmById(tank);
+                   if (!algo) continue;
+            cerr << "Updating tank " << tank->getId() << " for player " << player_id << endl;
             // Update position
-            player_tanks_pos[player_id][tank_idx] = tank->getPos();
-
+            player_tanks_pos[player_id][tank_idx] = tank->getPos(); //נופל פה
             // Update shell count if tank shot
             if (tank->getLastAction() == ActionRequest::Shoot)
             {
                 --player_shell_count[player_id];
             }
-
             // Handle battle info requests
             if (tank->getLastAction() == ActionRequest::GetBattleInfo)
             {
@@ -248,5 +255,6 @@ namespace GameManager_212535058_324022904
                 player.updateTankWithBattleInfo(*algo, *board_view);
             }
         }
+        cerr << "Tanks info updated for all tanks." << endl;
     }
 }
