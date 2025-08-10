@@ -139,13 +139,15 @@ bool Simulator::loadGameManager(const std::string &path)
 bool Simulator::loadAlgorithm(const std::string &path)
 {
     auto &registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
-   std::string baseName = getBaseName(path);
+    std::string baseName = getBaseName(path);
 
-    // Check if already loaded — if yes, just reuse it
+    // TODO: Check if already loaded, duplicate 
     for (const auto &algo : registrar)
     {
         if (algo.name() == baseName)
         {
+            registrar.createAlgorithmFactoryEntry(getBaseName(path));
+
             std::cout << "Reusing already loaded Algorithm: " << baseName << "\n";
             return true;
         }
@@ -427,7 +429,7 @@ void Simulator::runComparative()
         pool.enqueue([this, i, &results, &results_mutex]()
                      {
             GameResult result = runSingleComparativeGame(i);
-            if (result.gameState) {  // Only add valid results
+            if (result.winner!=-1) {  // Only add valid results
     std::cout << "Game " << i << " completed - Winner: " 
               << result.winner << std::endl;
     std::lock_guard<std::mutex> lock(results_mutex);
@@ -504,18 +506,20 @@ GameResult Simulator::runSingleComparativeGame(int manager_number)
                       << manager_number << std::endl;
             return {};
         }
-        else{
+        else
+        {
             std::cout << "Using GameManager: " << gm_registrar.getGameManager(manager_number).getName() << std::endl;
         }
 
         auto &map = mapInfo_.at(0);
-        auto player1 = algo1_player_factory.createPlayer(1, map.height, map.width, map.max_steps, map.num_shells);
-        auto player2 = algo2_player_factory.createPlayer(2, map.height, map.width, map.max_steps, map.num_shells);
+        auto player1 = algo1_player_factory.createPlayer(1, map.width, map.height, map.max_steps, map.num_shells);
+        auto player2 = algo2_player_factory.createPlayer(2, map.width, map.height, map.max_steps, map.num_shells);
         // Run the game
         GameResult result = game_manager->run(map.width, map.height,
                                               *map.map, map.name, map.max_steps, map.num_shells,
                                               *player1, "", *player2, "",
                                               algo1_player_factory.getTankAlgorithmFactory(), algo2_player_factory.getTankAlgorithmFactory());
+
         if (result.gameState == nullptr)
         {
             std::cerr << "Warning: Game returned null result!" << std::endl;
