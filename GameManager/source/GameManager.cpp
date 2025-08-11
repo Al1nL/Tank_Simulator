@@ -28,13 +28,14 @@ namespace GameManager_212535058_324022904
         players.push_back(&player1);
         players.push_back(&player2);
         initializeBoard(map);
-        initializeTanks(player1_tank_algo_factory, player2_tank_algo_factory);
-    if (verbose) {
-    }
+        auto res=prepareResult();
+		if(res.winner!=-1){
+            return res;
+        }
+		initializeTanks(player1_tank_algo_factory, player2_tank_algo_factory);
         // Main game loop
         while (!isGameOver())
         {
-
             processRound();
             board_view->update(board->objMapToCharMap());
 
@@ -129,17 +130,22 @@ namespace GameManager_212535058_324022904
         // Collect actions from all tanks
         for (auto tank : tanks)
         {
-            if (TankAlgorithm *algo = findTankAlgorithmById(tank))
-            {
-                actionRequests[tank] = algo->getAction();
-            }
-        }       
-        // Apply moves and update game state
-        board->applyMoves(actionRequests);
+            // Get action from algorithm
+		TankAlgorithm* tankPtr = findTankAlgorithmById(tank);
+		ActionRequest action = tankPtr->getAction();
+		actionRequests[tank] = action;
+		if (board->isValidMove(tank, action)){
+			tank->setActionSuccess(true);
+		}
+		else {
+			tank->setActionSuccess(false);
+		}
+		tank->setLastAction(action);
+	}
+	board->applyMoves(actionRequests);
+	updateTanksInfo(tanks);
 
-        updateTanksInfo(tanks);
-
-        board->boardCleanup();
+    board->boardCleanup();
     }
 
     GameResult GameManager::prepareResult()
@@ -149,7 +155,7 @@ namespace GameManager_212535058_324022904
         int p2_tanks = countAliveTanks(2);
         result.remaining_tanks.push_back(p1_tanks);
         result.remaining_tanks.push_back(p2_tanks);
-
+		result.winner=-1;
 
         if (p1_tanks == 0 && p2_tanks == 0)
         {
@@ -222,20 +228,19 @@ namespace GameManager_212535058_324022904
     {
         for (Tank *tank : tanks)
         {
-
             int player_id = tank->getOwnerId();
             int tank_idx = tank->getId();
 
             if (!player_tanks_algo[player_id].count(tank_idx))
                 continue;
-            TankAlgorithm *algo = player_tanks_algo[player_id][tank_idx].get();
-
-                   //TankAlgorithm* algo = findTankAlgorithmById(tank);
+           TankAlgorithm* algo = findTankAlgorithmById(tank);
                    if (!algo) continue;
+            if (tank->isKilledThisRound()){
+			--player_tank_count[player_id];
+            tank->setKilledThisRound(false);
+            }
             // Update position
-            //cerr << "New position: " << tank->getPos().first << ", " << tank->getPos().second << endl;
-            player_tanks_pos[player_id][tank_idx] = tank->getPos(); //נופל פה
-            //cerr << "Player " << player_id << " tank " << tank_idx << " position updated." << endl;
+            player_tanks_pos[player_id][tank_idx] = tank->getPos();
 
             // Update shell count if tank shot
             if (tank->getLastAction() == ActionRequest::Shoot)
