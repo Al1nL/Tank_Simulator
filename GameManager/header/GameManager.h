@@ -9,6 +9,8 @@
 #include <memory>
 #include <map>
 #include <vector>
+#include <string>
+#include <iostream>
 #include "./BoardManager.h"
 using namespace UserCommon__212535058_324022904;
 
@@ -76,6 +78,10 @@ TankAlgorithmFactory player2_tank_algo_factory) override;
         string generateRoundOutput(map<Tank *, ActionRequest>);
         string joinActions(const vector<string> &actions);
         void writeOutput();
+            void logGameResult();
+                void setupOutputFile(const string &filePath);
+
+
     };
 }
 

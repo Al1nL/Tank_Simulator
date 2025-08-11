@@ -1,5 +1,6 @@
 #include "../header/GameManager.h"
 #include "../../common/GameManagerRegistration.h"
+
 namespace GameManager_212535058_324022904
 {
 
@@ -49,6 +50,12 @@ namespace GameManager_212535058_324022904
             {
                 ++steps_since_no_shells;
             }
+        }
+        if(verbose){
+            setupOutputFile(map_name);
+            logGameResult();
+	        writeOutput();
+	        board->writeBoardStates(output_file);
         }
         auto result = prepareResult();
         return result;
@@ -144,6 +151,8 @@ namespace GameManager_212535058_324022904
 	}
 	board->applyMoves(actionRequests);
 	updateTanksInfo(tanks);
+    if(verbose) 
+    	logs.push_back(generateRoundOutput(actionRequests));
 
     board->boardCleanup();
     }
@@ -257,4 +266,133 @@ namespace GameManager_212535058_324022904
             }
         }
     }
+// Logging funcs
+
+/**
+ * @brief Converts the actions of tanks for a round into a formatted string output.
+ * @param tankActions Map of Tank pointers to their respective ActionRequests.
+ * @return String summarizing the actions performed by each tank.
+ */
+string GameManager::generateRoundOutput(map<Tank *, ActionRequest> tankActions)
+{
+	vector<string> actions;
+	for (const auto &[tank, acts] : tankActions)
+	{
+		string move = actionToString(acts);
+		if (tank->isDestroyed())
+		{
+			if (tank->isKilledThisRound())
+			{
+				actions.push_back(tank->getActionSuccess() ? move + " (killed)" : " (ignored) (killed)");
+				tank->setKilledThisRound(false);
+			}
+			else
+			{
+				actions.push_back("killed");
+			}
+			continue;
+		}
+		actions.push_back(tank->getActionSuccess() ? move : move + " (ignored)");
+	}
+	return joinActions(actions);
+}
+
+/**
+ * @brief Joins a vector of action strings into a single comma-separated string.
+ * @param actions Vector of action strings.
+ * @return Single string with actions separated by commas.
+ */
+string GameManager::joinActions(const vector<string> &actions)
+{
+	string result;
+	for (size_t i = 0; i < actions.size(); ++i)
+	{
+		if (i != 0)
+			result += ", ";
+		result += actions[i];
+	}
+	return result;
+}
+
+/**
+ * @brief Logs the game result based on remaining alive tanks.
+ *        Adds a summary message to the logs vector.
+ */
+void GameManager::logGameResult()
+{
+	int p1 = countAliveTanks(1);
+	int p2 = countAliveTanks(2);
+
+	if (p1 > 0 && p2 == 0)
+	{
+		logs.push_back("Player 1 won with " + std::to_string(p1) + " tanks still alive");
+	}
+	else if (p2 > 0 && p1 == 0)
+	{
+		logs.push_back("Player 2 won with " + std::to_string(p2) + " tanks still alive");
+	}
+	else if (current_step >= max_steps)
+	{
+		logs.push_back("Tie, reached max steps = " + std::to_string(max_steps) +
+					   ", player 1 has " + std::to_string(p1) +
+					   " tanks, player 2 has " + std::to_string(p2) + " tanks");
+	}
+	else
+	{
+		logs.push_back("Tie, both players have zero tanks");
+	}
+
+	cerr << logs[logs.size() - 1] << endl;
+}
+
+/**
+ * @brief Converts an ActionRequest enum to its string representation.
+ * @param action The ActionRequest to convert.
+ * @return The string corresponding to the action.
+ */
+string GameManager::actionToString(ActionRequest action)
+{
+	switch (action)
+	{
+	case ActionRequest::MoveForward:
+		return "MoveForward";
+	case ActionRequest::MoveBackward:
+		return "MoveBackward";
+	case ActionRequest::RotateLeft90:
+		return "RotateLeft90";
+	case ActionRequest::RotateRight90:
+		return "RotateRight90";
+	case ActionRequest::RotateLeft45:
+		return "RotateLeft45";
+	case ActionRequest::RotateRight45:
+		return "RotateRight45";
+	case ActionRequest::Shoot:
+		return "Shoot";
+	case ActionRequest::GetBattleInfo:
+		return "GetBattleInfo";
+	case ActionRequest::DoNothing:
+		return "DoNothing";
+	default:
+		return "Unknown";
+	}
+}
+
+/**
+ * @brief Writes the logs collected during the game to the output file.
+ *        Appends each log entry on a new line.
+ */
+void GameManager::writeOutput()
+{
+	ofstream out(output_file);
+	for (const auto &line : logs)
+	{
+		out << line << "\n";
+	}
+}
+void GameManager::setupOutputFile(const string &filePath)
+{
+	size_t last_slash = filePath.find_last_of("/\\");
+	output_file = "output_" + (last_slash == string::npos ? filePath : filePath.substr(last_slash + 1)); // string::npos = “not found”
+}
+
 }
