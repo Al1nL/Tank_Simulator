@@ -19,9 +19,10 @@
 int main(int argc, char** argv) {
     const std::string soPath = argv[1],
         gameManagerPath = argv[2];
-    Simulator* sim = new Simulator();
-    sim->initGame_(argc, argv);
-    sim->run();
+    Simulator sim;
+   if( sim.initGame_(argc, argv))
+        sim.run();
+    return 0;
 }
 //     std::vector<std::string> so_args;
 //     so_args.push_back(soPath);

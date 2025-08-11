@@ -32,7 +32,8 @@ GameMapInfo MapReader::readBoard(const string &filePath)
 		errorLog.close();
 		remove("input_errors.txt");
 	}
-
+	rows_=map_info.height;
+	cols_=map_info.width;
     return map_info;
 }
 
@@ -187,3 +188,15 @@ void MapReader::checkExcessRows(ifstream &file, bool &hasErrors, ofstream &error
 		errorLog << extraRows << " excess rows found. Ignoring them.\n";
 	}
 }
+  string MapReader::gameStateToString(const SatelliteView &view){
+	string result;
+	for (size_t i = 0; i < rows_; ++i)
+	{
+		for (size_t j = 0; j < cols_; ++j)
+		{
+			result += view.getObjectAt(i, j);
+		}
+		result += '\n';
+	}
+	return result;
+  }

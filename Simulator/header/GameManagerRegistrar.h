@@ -25,7 +25,9 @@ class GameManagerRegistrar {
             assert(factory == nullptr);
             factory = std::move(f);
         }
-
+        void setHandle(void* handle) {
+            library_handle = handle;
+        }
         const std::string& name() const { return so_name; }
 
         std::unique_ptr<AbstractGameManager> create(bool verbose) const {
@@ -62,7 +64,10 @@ public:
         std::lock_guard<std::mutex> lock(mutex);
         game_managers.emplace_back(name, handle);
     }
-
+    void setHandleToLastEntry(void* handle) {
+        std::lock_guard<std::mutex> lock(mutex);
+        game_managers.back().setHandle(handle);
+    }
     void addFactoryToLastEntry(GameManagerFactory&& factory) {
         std::lock_guard<std::mutex> lock(mutex);
         game_managers.back().setFactory(std::move(factory));
@@ -116,6 +121,8 @@ public:
         for (auto& entry : game_managers) {
             if (entry.getHandle()) {
                 dlclose(entry.getHandle());
+                entry.setHandle(nullptr);
+
             }
         }
         game_managers.clear();

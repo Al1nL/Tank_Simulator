@@ -115,7 +115,7 @@ bool Simulator::loadGameManager(const std::string &path)
         registrar.removeLast();
         return false;
     }
-
+    registrar.setHandleToLastEntry(handle);
     dlerror(); // Clear errors
 
     try
@@ -131,7 +131,7 @@ bool Simulator::loadGameManager(const std::string &path)
                   << "Has name: " << e.hasName << "\n"
                   << "Has factory: " << e.hasFactory << std::endl;
         registrar.removeLast();
-        dlclose(handle);
+        //dlclose(handle);
         return false;
     }
 }
@@ -141,27 +141,28 @@ bool Simulator::loadAlgorithm(const std::string &path)
     auto &registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
     std::string baseName = getBaseName(path);
 
-    // TODO: Check if already loaded, duplicate 
-    for (const auto &algo : registrar)
-    {
-        if (algo.name() == baseName)
-        {
-            registrar.createAlgorithmFactoryEntry(getBaseName(path));
+    // TODO: if already loaded, duplicate entry
 
-            std::cout << "Reusing already loaded Algorithm: " << baseName << "\n";
-            return true;
-        }
-    }
+    // for (const auto &algo : registrar)
+    // {
+    //     if (algo.name() == baseName)
+    //     {
+    //         registrar.createAlgorithmFactoryEntry(getBaseName(path));
+    //        //registrar.setHandleToLastEntry(algo.getHandle());
+    //         std::cout << "Reusing already loaded Algorithm: " << baseName << "\n";
+    //         return true;
+    //     }
+    // }
     registrar.createAlgorithmFactoryEntry(getBaseName(path));
 
-    void *handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+    void *handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_LOCAL);
     if (!handle)
     {
         std::cerr << "Failed to load Algorithm " << path << ": " << dlerror() << std::endl;
         registrar.removeLast();
         return false;
     }
-
+   //registrar.setHandleToLastEntry(handle);
     dlerror(); // Clear errors
 
     try
@@ -177,14 +178,13 @@ bool Simulator::loadAlgorithm(const std::string &path)
                   << "Has Player factory: " << e.hasPlayerFactory << "\n"
                   << "Has TankAlgorithm factory: " << e.hasTankAlgorithmFactory << std::endl;
         registrar.removeLast();
-        dlclose(handle);
+        // dlclose(handle);
         return false;
     }
 }
 
 bool Simulator::loadAllMaps(const std::string &path)
 {
-    MapReader reader;
     if (!fs::is_directory(path))
     {
         auto map = reader.readBoard(path);
@@ -452,6 +452,7 @@ void Simulator::runComparative()
         std::string key = std::to_string(result.winner) + "|" +
                           std::to_string(static_cast<int>(result.reason)) + "|" +
                           std::to_string(result.rounds);
+                          //TODO: add key for game state
         result_groups[key].push_back(gm_registrar.getGameManager(manager_idx).getName());
     }
 
@@ -573,5 +574,16 @@ void Simulator::logResults(std::unordered_map<std::string, std::vector<std::stri
         }
         output << "\n";
         output << "Rounds: " << rounds << "\n\n";
+        output << "Game State:\n";
+        // TODO: Add game state output
     }
+}
+
+
+Simulator::~Simulator()
+{
+    // Clean up loaded libraries
+    GameManagerRegistrar::getGameManagerRegistrar().cleanup();
+    AlgorithmRegistrar::getAlgorithmRegistrar().cleanup();
+    mapInfo_.clear();
 }
