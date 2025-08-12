@@ -131,7 +131,7 @@ bool Simulator::loadGameManager(const std::string &path)
                   << "Has name: " << e.hasName << "\n"
                   << "Has factory: " << e.hasFactory << std::endl;
         registrar.removeLast();
-        //dlclose(handle);
+        // dlclose(handle);
         return false;
     }
 }
@@ -162,7 +162,7 @@ bool Simulator::loadAlgorithm(const std::string &path)
         registrar.removeLast();
         return false;
     }
-   //registrar.setHandleToLastEntry(handle);
+    // registrar.setHandleToLastEntry(handle);
     dlerror(); // Clear errors
 
     try
@@ -451,8 +451,7 @@ void Simulator::runComparative()
     {
         std::string key = std::to_string(result.winner) + "|" +
                           std::to_string(static_cast<int>(result.reason)) + "|" +
-                          std::to_string(result.rounds);
-                          //TODO: add key for game state
+                          std::to_string(result.rounds) + "|" + reader.gameStateToString(*result.gameState); // Use gameStateToString to get a string representation of the game state
         result_groups[key].push_back(gm_registrar.getGameManager(manager_idx).getName());
     }
 
@@ -470,15 +469,19 @@ std::string Simulator::getBaseName(const std::string &filename)
 {
     // Find the last '.' in the string
     size_t last_dot = filename.find_last_of('.');
+    size_t last_slash = filename.find_last_of("/\\");
 
-    // If no extension found, return the whole string
-    if (last_dot == std::string::npos)
+    // If no slash, start from the beginning
+    size_t start_pos = (last_slash == std::string::npos) ? 0 : last_slash + 1;
+
+    // If no dot or dot is before the last slash (e.g., "dir/file"), return from start_pos to end
+    if (last_dot == std::string::npos || last_dot < start_pos)
     {
-        return filename;
+        return filename.substr(start_pos);
     }
 
-    // Return substring up to (but not including) the last '.'
-    return filename.substr(0, last_dot);
+    // Otherwise, return from start_pos to last_dot (excluding the extension)
+    return filename.substr(start_pos, last_dot - start_pos);
 }
 
 GameResult Simulator::runSingleComparativeGame(int manager_number)
@@ -518,7 +521,7 @@ GameResult Simulator::runSingleComparativeGame(int manager_number)
         // Run the game
         GameResult result = game_manager->run(map.width, map.height,
                                               *map.map, map.name, map.max_steps, map.num_shells,
-                                              *player1, "", *player2, "",
+                                              *player1, algo1_player_factory.name(), *player2, algo2_player_factory.name(),
                                               algo1_player_factory.getTankAlgorithmFactory(), algo2_player_factory.getTankAlgorithmFactory());
 
         if (result.gameState == nullptr)
@@ -543,11 +546,12 @@ void Simulator::logResults(std::unordered_map<std::string, std::vector<std::stri
         // Parse key components
         size_t pos1 = key.find('|');
         size_t pos2 = key.find('|', pos1 + 1);
+        size_t pos3 = key.find('|', pos2 + 1);
 
         int winner = std::stoi(key.substr(0, pos1));
         GameResult::Reason reason = static_cast<GameResult::Reason>(std::stoi(key.substr(pos1 + 1, pos2 - pos1 - 1)));
-        size_t rounds = std::stoi(key.substr(pos2 + 1));
-
+        size_t rounds = std::stoi(key.substr(pos2 + 1, pos3 - pos2 - 1));
+        string game_state = key.substr(pos3 + 1);
         // Output manager names
         for (size_t i = 0; i < managers.size(); ++i)
         {
@@ -575,10 +579,9 @@ void Simulator::logResults(std::unordered_map<std::string, std::vector<std::stri
         output << "\n";
         output << "Rounds: " << rounds << "\n\n";
         output << "Game State:\n";
-        // TODO: Add game state output
+        output << game_state;
     }
 }
-
 
 Simulator::~Simulator()
 {

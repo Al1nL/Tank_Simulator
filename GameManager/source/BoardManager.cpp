@@ -373,7 +373,7 @@ namespace GameManager_212535058_324022904
                 if (game_map[x][y].size() > 0)
                 {
                     auto obj = game_map[x][y].size() > 1 ? game_map[x][y][1].get() : game_map[x][y][0].get();
-                    charMap[x].push_back(obj ? obj->getSymbol() : ' ');
+                    charMap[x].push_back(obj && !obj->isDestroyed() ? obj->getSymbol() : ' ');
                 }
                 else // shouldn't reach here
                     charMap[x].push_back(' ');
@@ -465,7 +465,6 @@ namespace GameManager_212535058_324022904
             bool isValid = isValidMove(tank, action);
             tank->setActionSuccess(isValid);
             tank->setLastAction(action);
-
             if (!isValid)
                 continue;
 

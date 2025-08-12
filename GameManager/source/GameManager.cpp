@@ -24,16 +24,16 @@ namespace GameManager_212535058_324022904
         current_step = 0;
         num_shells = numShells;
         steps_since_no_shells = 0;
-        output_file = "output_P1_" + name1 + "_P2_" + name2 + "_Map_" + map_name + ".txt";
         // Initialize board and tanks
         players.push_back(&player1);
         players.push_back(&player2);
         initializeBoard(map);
-        auto res=prepareResult();
-		if(res.winner!=-1){
+        auto res = prepareResult();
+        if (res.winner != -1)
+        {
             return res;
         }
-		initializeTanks(player1_tank_algo_factory, player2_tank_algo_factory);
+        initializeTanks(player1_tank_algo_factory, player2_tank_algo_factory);
         // Main game loop
         while (!isGameOver())
         {
@@ -51,11 +51,12 @@ namespace GameManager_212535058_324022904
                 ++steps_since_no_shells;
             }
         }
-        if(verbose){
-            setupOutputFile(map_name);
+        if (verbose)
+        {
+            setupOutputFile(map_name, name1, name2);
             logGameResult();
-	        writeOutput();
-	        board->writeBoardStates(output_file);
+            writeOutput();
+            board->writeBoardStates(output_file);
         }
         auto result = prepareResult();
         return result;
@@ -138,23 +139,16 @@ namespace GameManager_212535058_324022904
         for (auto tank : tanks)
         {
             // Get action from algorithm
-		TankAlgorithm* tankPtr = findTankAlgorithmById(tank);
-		ActionRequest action = tankPtr->getAction();
-		actionRequests[tank] = action;
-		if (board->isValidMove(tank, action)){
-			tank->setActionSuccess(true);
-		}
-		else {
-			tank->setActionSuccess(false);
-		}
-		tank->setLastAction(action);
-	}
-	board->applyMoves(actionRequests);
-	updateTanksInfo(tanks);
-    if(verbose) 
-    	logs.push_back(generateRoundOutput(actionRequests));
+            TankAlgorithm *tankPtr = findTankAlgorithmById(tank);
+            ActionRequest action = tankPtr->getAction();
+            actionRequests[tank] = action;
+        }
+        board->applyMoves(actionRequests);
+        updateTanksInfo(tanks);
+        if (verbose)
+            logs.push_back(generateRoundOutput(actionRequests));
 
-    board->boardCleanup();
+        board->boardCleanup();
     }
 
     GameResult GameManager::prepareResult()
@@ -164,7 +158,7 @@ namespace GameManager_212535058_324022904
         int p2_tanks = countAliveTanks(2);
         result.remaining_tanks.push_back(p1_tanks);
         result.remaining_tanks.push_back(p2_tanks);
-		result.winner=-1;
+        result.winner = -1;
 
         if (p1_tanks == 0 && p2_tanks == 0)
         {
@@ -242,11 +236,14 @@ namespace GameManager_212535058_324022904
 
             if (!player_tanks_algo[player_id].count(tank_idx))
                 continue;
-           TankAlgorithm* algo = findTankAlgorithmById(tank);
-                   if (!algo) continue;
-            if (tank->isKilledThisRound()){
-			--player_tank_count[player_id];
-            tank->setKilledThisRound(false);
+            TankAlgorithm *algo = findTankAlgorithmById(tank);
+            if (!algo)
+                continue;
+            if (tank->isKilledThisRound())
+            {
+                --player_tank_count[player_id];
+                if (!verbose)
+                    tank->setKilledThisRound(false);
             }
             // Update position
             player_tanks_pos[player_id][tank_idx] = tank->getPos();
@@ -262,137 +259,135 @@ namespace GameManager_212535058_324022904
                 dynamic_cast<BoardSatelliteView *>(board_view.get())->setRequestingTankPos(tank->getPos());
                 Player &player = (player_id == 1) ? *players[0] : *players[1];
                 player.updateTankWithBattleInfo(*algo, *board_view);
-
             }
         }
     }
-// Logging funcs
+    // Logging funcs
 
-/**
- * @brief Converts the actions of tanks for a round into a formatted string output.
- * @param tankActions Map of Tank pointers to their respective ActionRequests.
- * @return String summarizing the actions performed by each tank.
- */
-string GameManager::generateRoundOutput(map<Tank *, ActionRequest> tankActions)
-{
-	vector<string> actions;
-	for (const auto &[tank, acts] : tankActions)
-	{
-		string move = actionToString(acts);
-		if (tank->isDestroyed())
-		{
-			if (tank->isKilledThisRound())
-			{
-				actions.push_back(tank->getActionSuccess() ? move + " (killed)" : " (ignored) (killed)");
-				tank->setKilledThisRound(false);
-			}
-			else
-			{
-				actions.push_back("killed");
-			}
-			continue;
-		}
-		actions.push_back(tank->getActionSuccess() ? move : move + " (ignored)");
-	}
-	return joinActions(actions);
-}
+    /**
+     * @brief Converts the actions of tanks for a round into a formatted string output.
+     * @param tankActions Map of Tank pointers to their respective ActionRequests.
+     * @return String summarizing the actions performed by each tank.
+     */
+    string GameManager::generateRoundOutput(map<Tank *, ActionRequest> tankActions)
+    {
+        vector<string> actions;
+        for (const auto &[tank, acts] : tankActions)
+        {
+            string move = actionToString(acts);
+            if (tank->isDestroyed())
+            {
+                if (tank->isKilledThisRound())
+                {
+                    actions.push_back(tank->getActionSuccess() ? move + " (killed)" : " (ignored) (killed)");
+                    tank->setKilledThisRound(false);
+                }
+                else
+                {
+                    actions.push_back("killed");
+                }
+                continue;
+            }
+            actions.push_back(tank->getActionSuccess() ? move : move + " (ignored)");
+        }
+        return joinActions(actions);
+    }
 
-/**
- * @brief Joins a vector of action strings into a single comma-separated string.
- * @param actions Vector of action strings.
- * @return Single string with actions separated by commas.
- */
-string GameManager::joinActions(const vector<string> &actions)
-{
-	string result;
-	for (size_t i = 0; i < actions.size(); ++i)
-	{
-		if (i != 0)
-			result += ", ";
-		result += actions[i];
-	}
-	return result;
-}
+    /**
+     * @brief Joins a vector of action strings into a single comma-separated string.
+     * @param actions Vector of action strings.
+     * @return Single string with actions separated by commas.
+     */
+    string GameManager::joinActions(const vector<string> &actions)
+    {
+        string result;
+        for (size_t i = 0; i < actions.size(); ++i)
+        {
+            if (i != 0)
+                result += ", ";
+            result += actions[i];
+        }
+        return result;
+    }
 
-/**
- * @brief Logs the game result based on remaining alive tanks.
- *        Adds a summary message to the logs vector.
- */
-void GameManager::logGameResult()
-{
-	int p1 = countAliveTanks(1);
-	int p2 = countAliveTanks(2);
+    /**
+     * @brief Logs the game result based on remaining alive tanks.
+     *        Adds a summary message to the logs vector.
+     */
+    void GameManager::logGameResult()
+    {
+        int p1 = countAliveTanks(1);
+        int p2 = countAliveTanks(2);
 
-	if (p1 > 0 && p2 == 0)
-	{
-		logs.push_back("Player 1 won with " + std::to_string(p1) + " tanks still alive");
-	}
-	else if (p2 > 0 && p1 == 0)
-	{
-		logs.push_back("Player 2 won with " + std::to_string(p2) + " tanks still alive");
-	}
-	else if (current_step >= max_steps)
-	{
-		logs.push_back("Tie, reached max steps = " + std::to_string(max_steps) +
-					   ", player 1 has " + std::to_string(p1) +
-					   " tanks, player 2 has " + std::to_string(p2) + " tanks");
-	}
-	else
-	{
-		logs.push_back("Tie, both players have zero tanks");
-	}
+        if (p1 > 0 && p2 == 0)
+        {
+            logs.push_back("Player 1 won with " + std::to_string(p1) + " tanks still alive");
+        }
+        else if (p2 > 0 && p1 == 0)
+        {
+            logs.push_back("Player 2 won with " + std::to_string(p2) + " tanks still alive");
+        }
+        else if (current_step >= max_steps)
+        {
+            logs.push_back("Tie, reached max steps = " + std::to_string(max_steps) +
+                           ", player 1 has " + std::to_string(p1) +
+                           " tanks, player 2 has " + std::to_string(p2) + " tanks");
+        }
+        else
+        {
+            logs.push_back("Tie, both players have zero tanks");
+        }
 
-	cerr << logs[logs.size() - 1] << endl;
-}
+        cerr << logs[logs.size() - 1] << endl;
+    }
 
-/**
- * @brief Converts an ActionRequest enum to its string representation.
- * @param action The ActionRequest to convert.
- * @return The string corresponding to the action.
- */
-string GameManager::actionToString(ActionRequest action)
-{
-	switch (action)
-	{
-	case ActionRequest::MoveForward:
-		return "MoveForward";
-	case ActionRequest::MoveBackward:
-		return "MoveBackward";
-	case ActionRequest::RotateLeft90:
-		return "RotateLeft90";
-	case ActionRequest::RotateRight90:
-		return "RotateRight90";
-	case ActionRequest::RotateLeft45:
-		return "RotateLeft45";
-	case ActionRequest::RotateRight45:
-		return "RotateRight45";
-	case ActionRequest::Shoot:
-		return "Shoot";
-	case ActionRequest::GetBattleInfo:
-		return "GetBattleInfo";
-	case ActionRequest::DoNothing:
-		return "DoNothing";
-	default:
-		return "Unknown";
-	}
-}
+    /**
+     * @brief Converts an ActionRequest enum to its string representation.
+     * @param action The ActionRequest to convert.
+     * @return The string corresponding to the action.
+     */
+    string GameManager::actionToString(ActionRequest action)
+    {
+        switch (action)
+        {
+        case ActionRequest::MoveForward:
+            return "MoveForward";
+        case ActionRequest::MoveBackward:
+            return "MoveBackward";
+        case ActionRequest::RotateLeft90:
+            return "RotateLeft90";
+        case ActionRequest::RotateRight90:
+            return "RotateRight90";
+        case ActionRequest::RotateLeft45:
+            return "RotateLeft45";
+        case ActionRequest::RotateRight45:
+            return "RotateRight45";
+        case ActionRequest::Shoot:
+            return "Shoot";
+        case ActionRequest::GetBattleInfo:
+            return "GetBattleInfo";
+        case ActionRequest::DoNothing:
+            return "DoNothing";
+        default:
+            return "Unknown";
+        }
+    }
 
-/**
- * @brief Writes the logs collected during the game to the output file.
- *        Appends each log entry on a new line.
- */
-void GameManager::writeOutput()
-{
-	ofstream out(output_file);
-	for (const auto &line : logs)
-	{
-		out << line << "\n";
-	}
-}
-void GameManager::setupOutputFile(const string &filePath)
-{
-	size_t last_slash = filePath.find_last_of("/\\");
-	output_file = "output_" + (last_slash == string::npos ? filePath : filePath.substr(last_slash + 1)); // string::npos = “not found”
-}
-
+    /**
+     * @brief Writes the logs collected during the game to the output file.
+     *        Appends each log entry on a new line.
+     */
+    void GameManager::writeOutput()
+    {
+        ofstream out(output_file);
+        for (const auto &line : logs)
+        {
+            out << line << "\n";
+        }
+    }
+    void GameManager::setupOutputFile(const string &filePath, const string &name1, const string &name2)
+    {
+        size_t last_slash = filePath.find_last_of("/\\");
+        output_file = "output_GM_212535058_324022904_P1_" + name1 + "_P2_" + name2 + "_" + (last_slash == string::npos ? filePath : filePath.substr(last_slash + 1)); // string::npos = “not found”
+    }
 }
