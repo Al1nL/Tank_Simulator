@@ -203,9 +203,9 @@ Direction TankBattleInfo::calculateRealDirection(int currRow, int currCol, int t
 
     // Normalize differences to identify direction only if strictly aligned
     if (rowDiff > 0 && colDiff == 0)
-        return Direction::U; // Down
+        return Direction::D; // Down
     if (rowDiff < 0 && colDiff == 0)
-        return Direction::D; // Up
+        return Direction::U; // Up
     if (rowDiff == 0 && colDiff > 0)
         return Direction::L; // Right
     if (rowDiff == 0 && colDiff < 0)
