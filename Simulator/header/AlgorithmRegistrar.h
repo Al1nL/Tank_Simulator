@@ -23,13 +23,13 @@ class AlgorithmRegistrar {
                 playerFactory = std::move(factory);
             }
              ~AlgorithmAndPlayerFactories() {
-            if (library_handle) {
-                dlclose(library_handle);
-            }        
-        }
-        void* getHandle() const { return library_handle; }
-        void setHandle(void* handle) { if (!library_handle) library_handle = handle; }
-        const std::string& name() const { return so_name; }
+                if (library_handle) {
+                    dlclose(library_handle);
+                }        
+            }
+            void* getHandle() const { return library_handle; }
+            void setHandle(void* handle) { if (!library_handle) library_handle = handle; }
+            const std::string& name() const { return so_name; }
             std::unique_ptr<Player> createPlayer(int player_index, size_t x, size_t y, size_t max_steps, size_t num_shells) const {
                 return playerFactory(player_index, x, y, max_steps, num_shells);
             }
@@ -47,6 +47,10 @@ class AlgorithmRegistrar {
             {
                 return tankAlgorithmFactory;
             }
+
+            PlayerFactory getPlayerFactory() const{
+                return playerFactory;
+            }
         };
 
 
@@ -62,6 +66,7 @@ public:
         algorithms.back().setPlayerFactory(std::move(factory));
     }
     void addTankAlgorithmFactoryToLastEntry(TankAlgorithmFactory&& factory) {
+        assert(factory);
         algorithms.back().setTankAlgorithmFactory(std::move(factory));
     }
     void setHandleToLastEntry(void* handle) {

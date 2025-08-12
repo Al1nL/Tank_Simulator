@@ -141,30 +141,35 @@ bool Simulator::loadAlgorithm(const std::string &path)
     auto &registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
     std::string baseName = getBaseName(path);
 
-    // TODO: if already loaded, duplicate entry
-
-    // for (const auto &algo : registrar)
-    // {
-    //     if (algo.name() == baseName)
-    //     {
-    //         registrar.createAlgorithmFactoryEntry(getBaseName(path));
-    //        //registrar.setHandleToLastEntry(algo.getHandle());
-    //         std::cout << "Reusing already loaded Algorithm: " << baseName << "\n";
-    //         return true;
-    //     }
-    // }
-    registrar.createAlgorithmFactoryEntry(getBaseName(path));
-
-    void *handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_LOCAL);
-    if (!handle)
-    {
-        std::cerr << "Failed to load Algorithm " << path << ": " << dlerror() << std::endl;
-        registrar.removeLast();
-        return false;
+    // Check if we already loaded this exact file
+    bool isRegistred = false;
+    for (const auto& entry : registrar) {
+        if (entry.name() == baseName) {
+            // Create new entry with same factories
+            registrar.createAlgorithmFactoryEntry(baseName);
+            TankAlgorithmFactory tank_dup = [factory = entry.getTankAlgorithmFactory()]
+                                          (int p, int t) { return factory(p, t); };
+            registrar.addTankAlgorithmFactoryToLastEntry(std::move(tank_dup));
+            registrar.addPlayerFactoryToLastEntry(entry.getPlayerFactory());
+            isRegistred = true;
+            break;
+        }
     }
-    // registrar.setHandleToLastEntry(handle);
-    dlerror(); // Clear errors
 
+    // Otherwise, load it fresh
+    if(!isRegistred){
+        registrar.createAlgorithmFactoryEntry(baseName);
+        void *handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_LOCAL);
+        if (!handle)
+        {
+            std::cerr << "Failed to load Algorithm " << path << ": " << dlerror() << std::endl;
+            registrar.removeLast();
+            return false;
+        }
+    }
+    //registrar.setHandleToLastEntry(handle);
+    dlerror(); // Clear errors
+        
     try
     {
         registrar.validateLastRegistration();
@@ -518,6 +523,8 @@ GameResult Simulator::runSingleComparativeGame(int manager_number)
         auto &map = mapInfo_.at(0);
         auto player1 = algo1_player_factory.createPlayer(1, map.width, map.height, map.max_steps, map.num_shells);
         auto player2 = algo2_player_factory.createPlayer(2, map.width, map.height, map.max_steps, map.num_shells);
+        
+        bool check = (algo1_player_factory.getTankAlgorithmFactory().target_type() == algo2_player_factory.getTankAlgorithmFactory().target_type());
         // Run the game
         GameResult result = game_manager->run(map.width, map.height,
                                               *map.map, map.name, map.max_steps, map.num_shells,
