@@ -9,7 +9,8 @@ using namespace Algorithm_212535058_324022904;
  *
  * Also sets the initial facing direction: L for player 1, R otherwise.
  */
-TankBattleInfo::TankBattleInfo(int tank_index, int player_index) : id(tank_index), player_id(player_index)
+
+ TankBattleInfo::TankBattleInfo(int tank_index, int player_index) : id(tank_index), player_id(player_index)
 {
     direction = player_id == 1 ? L : R;
 }
@@ -202,21 +203,21 @@ Direction TankBattleInfo::calculateRealDirection(int currRow, int currCol, int t
 
     // Normalize differences to identify direction only if strictly aligned
     if (rowDiff > 0 && colDiff == 0)
-        return Direction::D; // Down
+        return Direction::U; // Down
     if (rowDiff < 0 && colDiff == 0)
-        return Direction::U; // Up
+        return Direction::D; // Up
     if (rowDiff == 0 && colDiff > 0)
-        return Direction::R; // Right
+        return Direction::L; // Right
     if (rowDiff == 0 && colDiff < 0)
-        return Direction::L; // Left
+        return Direction::R; // Left
     if (rowDiff == colDiff && rowDiff > 0)
         return Direction::DR; // Down-Right (strict diagonal)
     if (rowDiff == -colDiff && rowDiff > 0)
         return Direction::DL; // Down-Left (strict diagonal)
     if (rowDiff == colDiff && rowDiff < 0)
-        return Direction::UR; // Up-Right (strict diagonal)
+        return Direction::UL; // Up-Right (strict diagonal)
     if (rowDiff == -colDiff && rowDiff < 0)
-        return Direction::UL; // Up-Left (strict diagonal)
+        return Direction::UR; // Up-Left (strict diagonal)
 
     return Direction::None; // None for non-aligned movement
 }

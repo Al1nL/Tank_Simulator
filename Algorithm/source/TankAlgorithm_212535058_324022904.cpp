@@ -59,7 +59,7 @@ ActionRequest TankAlgorithm_212535058_324022904::decideAction() {
 			return res;
 		if(battle_info->getRemainingShells() > 0 && !battle_info->isWaitingToShoot())
 			return ActionRequest::Shoot;
-	}
+		}
 
 	if(willBeHitIn(battle_info->getPosition().first,battle_info->getPosition().second,2)) {
 		ActionRequest res;
@@ -73,10 +73,9 @@ ActionRequest TankAlgorithm_212535058_324022904::decideAction() {
 		}
 	}
 
-
     // Shoot if aligned and safe
-    if (shouldShootOpponent(opp) && !battle_info->isWaitingToShoot()) {
-        return  ActionRequest::Shoot;
+    if (shouldShootOpponent(opp)){
+		return  ActionRequest::Shoot;
     }
 
 	if(current_turn - last_info_update > tank_index + 4){
@@ -132,8 +131,8 @@ Direction TankAlgorithm_212535058_324022904::simulateRotation(ActionRequest act)
  * @return True if shooting is advantageous, false otherwise.
  */
 bool TankAlgorithm_212535058_324022904::shouldShootOpponent(OppData& opp) {
-	if (battle_info->isWaitingToShoot() || battle_info->getRemainingShells() <= 0) {
-		return false;
+	if (battle_info->isWaitingToShoot() || battle_info->getRemainingShells() <= 0 || !isAlignedWithOpponent(opp.opponentPos)) {
+		 return false;
 	}
 
 	auto [currentRow, currentCol] = battle_info->getPosition();

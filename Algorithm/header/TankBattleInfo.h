@@ -48,10 +48,8 @@ namespace Algorithm_212535058_324022904
 
         void setMovedBackwardLast(bool);
         bool getMovedBackwardLast();
-
-        void setShootCooldown(int cooldown = 4);
-
-        bool isWaitingToReverse() const;
+        void decreaseShootCooldown(){ shoot_cooldown>0?shoot_cooldown--:shoot_cooldown;}
+        void setShootCooldown(int cooldown = 4);        bool isWaitingToReverse() const;
         bool isWaitingToShoot() const;
 
         void decreaseRemainingShells();

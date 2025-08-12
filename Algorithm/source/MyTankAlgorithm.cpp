@@ -10,7 +10,8 @@ using namespace Algorithm_212535058_324022904;
  * @param player_index Index of the player that the tank will belong to.
  * @param tank_index Index of this tank.
  */
-MyTankAlgorithm::MyTankAlgorithm(int player_index, int tank_index) : player_index(player_index), tank_index(tank_index), battle_info(make_unique<TankBattleInfo>(tank_index, player_index)) {}
+MyTankAlgorithm::MyTankAlgorithm(int player_index, int tank_index) : player_index(player_index), tank_index(tank_index), battle_info(make_unique<TankBattleInfo>(tank_index, player_index)) {
+}
 
 /**
  * @brief Updates the internal battle info object with the latest game state.
@@ -27,6 +28,7 @@ void MyTankAlgorithm::updateBattleInfo(BattleInfo &info)
 	battle_info->setDirection(tank_info.getDirection());
 	battle_info->setKnownObjects(tank_info.getKnownObjects());
 	battle_info->setRemainingShells(tank_info.getRemainingShells());
+	battle_info->setMapSize(tank_info.getMapSize().first, tank_info.getMapSize().second);
 }
 
 /**
@@ -55,10 +57,8 @@ pair<int, int> MyTankAlgorithm::nextStep(bool forward, const pair<int, int> pos,
 {
 	int side = forward ? 1 : -1;
 	auto [h, w] = battle_info->getMapSize();
-
 	int newRow = wrap(pos.first + offsets[dir].first * side, h);
 	int newCol = wrap(pos.second + offsets[dir].second * side, w);
-
 	return {newRow, newCol};
 }
 
@@ -287,6 +287,7 @@ bool MyTankAlgorithm::isAlignedWithOpponent(pair<int, int> opponentPos)
 {
 	auto [r, c] = battle_info->getPosition();
 	return r == opponentPos.first || c == opponentPos.second;
+	
 }
 
 /**
@@ -430,7 +431,10 @@ void MyTankAlgorithm::updateInnerInfoAfterAction(ActionRequest action)
 	pair<int, int> newPos = {-1, -1};
 	if (battle_info->isWaitingToReverse() && battle_info->getWaitingForBackward() == 0)
 		action = ActionRequest::MoveBackward; // back after 3 rounds, no matter what the other action now is, it is ignored?
-	switch (action)
+	if(action!=ActionRequest::Shoot){
+		battle_info->decreaseShootCooldown();
+		}
+		switch (action)
 	{
 	case ActionRequest::MoveForward:
 		if (battle_info->isWaitingToReverse())

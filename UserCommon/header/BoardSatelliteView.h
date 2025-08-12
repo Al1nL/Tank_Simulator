@@ -15,7 +15,7 @@ namespace UserCommon__212535058_324022904
         int cols;
         int rows;
         vector<vector<char>> map;
-        pair<int, int> requestingTankPos; // Position of tank making the request
+        pair<int, int> requestingTankPos={-1,-1}; // Position of tank making the request
 
     public:
         BoardSatelliteView(int r, int c, vector<vector<char>> m) : cols(c), rows(r), map(move(m)) {}
