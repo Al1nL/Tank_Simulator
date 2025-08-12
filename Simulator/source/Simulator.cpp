@@ -64,6 +64,10 @@ bool Simulator::initializeCompetitionMode()
         return false;
     }
 
+    if (!loadAllMaps(config_.arguments["game_maps_folder"]))
+    {
+        return false;
+    }
     // Load all algorithms from the folder
     size_t algorithm_count = 0;
     for (const auto &entry : fs::directory_iterator(config_.arguments["algorithms_folder"]))
@@ -143,14 +147,14 @@ bool Simulator::loadAlgorithm(const std::string &path)
 
     // Check if we already loaded this exact file
     bool isRegistred = false;
-    for (const auto& entry : registrar) {
-        if (entry.name() == baseName) {
+    int size = registrar.count();
+    for (int i = 0; i < size; i++) {
+        auto algo = registrar.getAlgorithmAndPlayerFactory(i);
+        if (algo.name() == baseName) {
             // Create new entry with same factories
             registrar.createAlgorithmFactoryEntry(baseName);
-            TankAlgorithmFactory tank_dup = [factory = entry.getTankAlgorithmFactory()]
-                                          (int p, int t) { return factory(p, t); };
-            registrar.addTankAlgorithmFactoryToLastEntry(std::move(tank_dup));
-            registrar.addPlayerFactoryToLastEntry(entry.getPlayerFactory());
+            registrar.addTankAlgorithmFactoryToLastEntry( algo.getTankAlgorithmFactory());
+            registrar.addPlayerFactoryToLastEntry(algo.getPlayerFactory());
             isRegistred = true;
             break;
         }
@@ -159,13 +163,16 @@ bool Simulator::loadAlgorithm(const std::string &path)
     // Otherwise, load it fresh
     if(!isRegistred){
         registrar.createAlgorithmFactoryEntry(baseName);
+
         void *handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_LOCAL);
+
         if (!handle)
         {
             std::cerr << "Failed to load Algorithm " << path << ": " << dlerror() << std::endl;
             registrar.removeLast();
             return false;
         }
+        // registrar.setHandleToLastEntry(make_shared_dl(handle));
     }
 
     dlerror(); // Clear errors
@@ -387,8 +394,10 @@ void Simulator::run()
     if (config_.mode == Comparative)
     {
         runComparative();
+    }else{
+        runCompetition();
     }
-    runCompetition();
+    
 }
 
 void Simulator::runComparative()
@@ -462,6 +471,7 @@ void Simulator::runComparative()
         result_groups[key].push_back(gm_registrar.getGameManager(manager_idx).getName());
     }
 
+    std::cout << "Here: " << output_path << "\n";
     logResults(result_groups, out_file); //::move(out_file));
     if (write_to_file)
     {
@@ -505,8 +515,7 @@ void Simulator::runCompetition() {
     std::mutex scores_mutex;
 
     // Create thread pool
-    ThreadPool pool(config_.num_threads || mapInfo_.size());
-
+    ThreadPool pool(config_.num_threads);
     // Process each map
     for (size_t map_idx = 0; map_idx < mapInfo_.size(); ++map_idx) {
         size_t k = map_idx % (num_algorithms - 1);
@@ -617,7 +626,7 @@ GameResult Simulator::runSingleComparativeGame(int manager_number)
         auto player1 = algo1_player_factory.createPlayer(1, map.width, map.height, map.max_steps, map.num_shells);
         auto player2 = algo2_player_factory.createPlayer(2, map.width, map.height, map.max_steps, map.num_shells);
 
-        bool check = (algo1_player_factory.getTankAlgorithmFactory().target_type() == algo2_player_factory.getTankAlgorithmFactory().target_type());
+        // bool check = (algo1_player_factory.getTankAlgorithmFactory().target_type() == algo2_player_factory.getTankAlgorithmFactory().target_type());
         // Run the game
         GameResult result = game_manager->run(map.width, map.height,
                                               *map.map, map.name, map.max_steps, map.num_shells,
@@ -725,7 +734,6 @@ void Simulator::logResults(std::unordered_map<std::string, std::vector<std::stri
                      << algo_registrar.getAlgorithmAndPlayerFactory(algo2_idx).name() << std::endl;
             return {};
         }
-
         return result;
     } catch (const std::exception& e) {
         std::cerr << "Error running game: " << e.what() << std::endl;
@@ -760,7 +768,7 @@ void Simulator::logResults(std::unordered_map<std::string, std::vector<std::stri
     if (worker_threads == 1) {
         return 1;
     }
-
+    std::cerr << worker_threads << std::endl;
     // Total threads will be 1 (main) + worker_threads (>=2)
     return worker_threads + 1;
  }
