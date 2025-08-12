@@ -1,6 +1,6 @@
 #ifndef ALGORITHMREGISTRAR_H
 #define ALGORITHMREGISTRAR_H
-
+#include <dlfcn.h>
 #include <vector>
 #include <cassert>
 #include "../../common/Player.h"
@@ -11,6 +11,7 @@ class AlgorithmRegistrar {
             std::string so_name;
             TankAlgorithmFactory tankAlgorithmFactory  = nullptr;
             PlayerFactory playerFactory;
+            void* library_handle = nullptr;
         public:
             AlgorithmAndPlayerFactories(const std::string& so_name) : so_name(so_name) {}
             void setTankAlgorithmFactory(TankAlgorithmFactory&& factory) {
@@ -21,6 +22,13 @@ class AlgorithmRegistrar {
                 assert(playerFactory == nullptr);
                 playerFactory = std::move(factory);
             }
+             ~AlgorithmAndPlayerFactories() {
+                if (library_handle) {
+                    dlclose(library_handle);
+                }        
+            }
+            void* getHandle() const { return library_handle; }
+            void setHandle(void* handle) { if (!library_handle) library_handle = handle; }
             const std::string& name() const { return so_name; }
             std::unique_ptr<Player> createPlayer(int player_index, size_t x, size_t y, size_t max_steps, size_t num_shells) const {
                 return playerFactory(player_index, x, y, max_steps, num_shells);
@@ -39,6 +47,10 @@ class AlgorithmRegistrar {
             {
                 return tankAlgorithmFactory;
             }
+
+            PlayerFactory getPlayerFactory() const{
+                return playerFactory;
+            }
         };
 
 
@@ -49,11 +61,16 @@ public:
     void createAlgorithmFactoryEntry(const std::string& name) {
         algorithms.emplace_back(AlgorithmAndPlayerFactories(name));
     }
+    
     void addPlayerFactoryToLastEntry(PlayerFactory&& factory) {
         algorithms.back().setPlayerFactory(std::move(factory));
     }
     void addTankAlgorithmFactoryToLastEntry(TankAlgorithmFactory&& factory) {
+        assert(factory);
         algorithms.back().setTankAlgorithmFactory(std::move(factory));
+    }
+    void setHandleToLastEntry(void* handle) {
+        getAlgorithmAndPlayerFactory(algorithms.size() - 1).setHandle(handle);
     }
     struct BadRegistrationException {
         std::string name;
@@ -81,11 +98,12 @@ public:
         return algorithms.end();
     }
     std::size_t count() const { return algorithms.size(); }
-    void clear() { algorithms.clear(); }
+    void cleanup() { algorithms.clear(); }
 
     AlgorithmAndPlayerFactories getAlgorithmAndPlayerFactory(int algo) const
     {
         return algorithms.at(algo);
     }
+    
 };
 #endif //ALGORITHMREGISTRAR_H

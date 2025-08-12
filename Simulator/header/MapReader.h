@@ -16,7 +16,7 @@ namespace UserCommon__212535058_324022904 {
 }
 
 struct GameMapInfo {
-  shared_ptr<SatelliteView> map;
+  std::unique_ptr<SatelliteView> map;
   string name;
   size_t width;
   size_t height;
@@ -31,12 +31,16 @@ struct GameMapInfo {
 
   GameMapInfo(GameMapInfo&&) = default;
     GameMapInfo& operator=(GameMapInfo&&) = default;
+  ~GameMapInfo() = default;
 };
 
 class MapReader{
+private:
+size_t rows_=0;
+size_t cols_=0;
 
   void parseMetadata(ifstream &file, bool &hasErrors, ofstream &errorLog,GameMapInfo&);
-  bool tryParseMetadata(const string &line, const string &key, int &value, bool &hasErrors, ofstream &errorLog);
+  bool tryParseMetadata(const string &line, const string &key, size_t &value, bool &hasErrors, ofstream &errorLog);
   bool hasAllMetadata(GameMapInfo&) const;
   void processMapRows(ifstream &file, bool &hasErrors, ofstream &errorLog,GameMapInfo&);
   void checkExcessColumns(const string &line, size_t row, bool &hasErrors, ofstream &errorLog);
@@ -44,5 +48,6 @@ class MapReader{
   void processRowCells(const string &line, size_t row, vector<vector<char>> &map, bool &hasErrors, ofstream &errorLog);
   public:
   GameMapInfo readBoard(const string &filePath);
+  string gameStateToString(const SatelliteView &);
   };
 #endif //MAPREADER_H

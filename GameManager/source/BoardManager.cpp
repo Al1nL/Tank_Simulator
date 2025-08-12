@@ -515,8 +515,8 @@ namespace GameManager_212535058_324022904
                     tank->setNumOfShells(tank->getNumOfRemainingShells() - 1);
                     tank->setShootCooldown(4);
                     pair shell_pos = calculateNewPosition(tank->getPos(), tank->getDirection());
-                    fired_shells.push_back(make_unique<Shell>(shell_pos, tank->getDirection(), tank->getOwnerId()));
-                    updateMap(make_unique<Shell>(shell_pos, tank->getDirection(), tank->getOwnerId()), shell_pos);
+                    fired_shells.push_back(std::make_unique<Shell>(shell_pos, tank->getDirection(), tank->getOwnerId()));
+                    updateMap(std::make_unique<Shell>(shell_pos, tank->getDirection(), tank->getOwnerId()), shell_pos);
                 }
                 break;
 
@@ -543,40 +543,5 @@ namespace GameManager_212535058_324022904
         }
 
         handleAllCollisions();
-    }
-
-    /**
-     * @brief Finds the position of a specific tank by player ID and tank index
-     *
-     * @param player_id Player ID (1 or 2)
-     * @param tank_idx Tank index (0-based)
-     * @return pair<int,int> Position (x,y) or (-1,-1) if not found
-     */
-    std::pair<int, int> BoardManager::getTankPosition(int player_id, int tank_idx) const
-    {
-        int current_idx = 0; // Track tanks of this player
-
-        for (int x = 0; x < height; ++x)
-        {
-            for (int y = 0; y < width; ++y)
-            {
-                for (const auto &obj : game_map[x][y])
-                {
-                    if (obj && (obj->getSymbol() == '1' || obj->getSymbol() == '2'))
-                    {
-                        Tank *tank = dynamic_cast<Tank *>(obj.get());
-                        if (tank && tank->getOwnerId() == player_id)
-                        {
-                            if (current_idx == tank_idx)
-                            {
-                                return {x, y};
-                            }
-                            current_idx++;
-                        }
-                    }
-                }
-            }
-        }
-        return {-1, -1}; // Not found
     }
 }

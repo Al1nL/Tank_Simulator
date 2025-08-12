@@ -115,7 +115,7 @@ bool Simulator::loadGameManager(const std::string &path)
         registrar.removeLast();
         return false;
     }
-
+    registrar.setHandleToLastEntry(handle);
     dlerror(); // Clear errors
 
     try
@@ -131,7 +131,7 @@ bool Simulator::loadGameManager(const std::string &path)
                   << "Has name: " << e.hasName << "\n"
                   << "Has factory: " << e.hasFactory << std::endl;
         registrar.removeLast();
-        dlclose(handle);
+        //dlclose(handle);
         return false;
     }
 }
@@ -141,25 +141,31 @@ bool Simulator::loadAlgorithm(const std::string &path)
     auto &registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
     std::string baseName = getBaseName(path);
 
-    // TODO: Check if already loaded, duplicate 
-    for (const auto &algo : registrar)
-    {
-        if (algo.name() == baseName)
-        {
-            registrar.createAlgorithmFactoryEntry(getBaseName(path));
-
-            std::cout << "Reusing already loaded Algorithm: " << baseName << "\n";
-            return true;
+    // Check if we already loaded this exact file
+    bool isRegistred = false;
+    for (const auto& entry : registrar) {
+        if (entry.name() == baseName) {
+            // Create new entry with same factories
+            registrar.createAlgorithmFactoryEntry(baseName);
+            TankAlgorithmFactory tank_dup = [factory = entry.getTankAlgorithmFactory()]
+                                          (int p, int t) { return factory(p, t); };
+            registrar.addTankAlgorithmFactoryToLastEntry(std::move(tank_dup));
+            registrar.addPlayerFactoryToLastEntry(entry.getPlayerFactory());
+            isRegistred = true;
+            break;
         }
     }
-    registrar.createAlgorithmFactoryEntry(getBaseName(path));
 
-    void *handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
-    if (!handle)
-    {
-        std::cerr << "Failed to load Algorithm " << path << ": " << dlerror() << std::endl;
-        registrar.removeLast();
-        return false;
+    // Otherwise, load it fresh
+    if(!isRegistred){
+        registrar.createAlgorithmFactoryEntry(baseName);
+        void *handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_LOCAL);
+        if (!handle)
+        {
+            std::cerr << "Failed to load Algorithm " << path << ": " << dlerror() << std::endl;
+            registrar.removeLast();
+            return false;
+        }
     }
 
     dlerror(); // Clear errors
@@ -177,14 +183,14 @@ bool Simulator::loadAlgorithm(const std::string &path)
                   << "Has Player factory: " << e.hasPlayerFactory << "\n"
                   << "Has TankAlgorithm factory: " << e.hasTankAlgorithmFactory << std::endl;
         registrar.removeLast();
-        dlclose(handle);
+        // dlclose(handle);
         return false;
     }
 }
 
 bool Simulator::loadAllMaps(const std::string &path)
 {
-    MapReader reader;
+    //MapReader reader;
     if (!fs::is_directory(path))
     {
         auto map = reader.readBoard(path);
@@ -452,6 +458,7 @@ void Simulator::runComparative()
         std::string key = std::to_string(result.winner) + "|" +
                           std::to_string(static_cast<int>(result.reason)) + "|" +
                           std::to_string(result.rounds);
+                          //TODO: add key for game state
         result_groups[key].push_back(gm_registrar.getGameManager(manager_idx).getName());
     }
 
@@ -463,7 +470,7 @@ void Simulator::runComparative()
     }
 }
 
-void Simulator::runCompetition() { 
+void Simulator::runCompetition() {
 
     // Check we have enough algorithms and maps
     auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
@@ -474,7 +481,7 @@ void Simulator::runCompetition() {
     auto time_str = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
                                       now.time_since_epoch())
                                       .count());
-    fs::path output_path = fs::path(config_.arguments["algorithms_folder"]) / 
+    fs::path output_path = fs::path(config_.arguments["algorithms_folder"]) /
                           ("competition_results_" + time_str + ".txt");
 
     // Try to open output file
@@ -483,7 +490,7 @@ void Simulator::runCompetition() {
     bool write_to_file = out_file.is_open();
 
     if (!write_to_file) {
-        std::cerr << "Error: Could not create output file at " << output_path 
+        std::cerr << "Error: Could not create output file at " << output_path
                   << ". Results will be printed to screen instead.\n\n";
     }
 
@@ -516,7 +523,7 @@ void Simulator::runCompetition() {
              // Enqueue the game
             pool.enqueue([this, map_idx, i, j, &algorithm_scores, &scores_mutex]() {
                 GameResult result = runSingleCompetitionGame(map_idx, i, j);
-                
+
                 if (result.gameState == nullptr) {
                     std::cerr << "Warning: Game returned null result!" << std::endl;
                     return; // Skip invalid results
@@ -546,7 +553,7 @@ void Simulator::runCompetition() {
     }
 
     // Sort results by score (descending)
-    std::sort(final_results.begin(), final_results.end(), 
+    std::sort(final_results.begin(), final_results.end(),
               [](const auto& a, const auto& b) { return b.second < a.second; });
 
     // Output final results
@@ -609,6 +616,8 @@ GameResult Simulator::runSingleComparativeGame(int manager_number)
         auto &map = mapInfo_.at(0);
         auto player1 = algo1_player_factory.createPlayer(1, map.width, map.height, map.max_steps, map.num_shells);
         auto player2 = algo2_player_factory.createPlayer(2, map.width, map.height, map.max_steps, map.num_shells);
+
+        bool check = (algo1_player_factory.getTankAlgorithmFactory().target_type() == algo2_player_factory.getTankAlgorithmFactory().target_type());
         // Run the game
         GameResult result = game_manager->run(map.width, map.height,
                                               *map.map, map.name, map.max_steps, map.num_shells,
@@ -668,12 +677,14 @@ void Simulator::logResults(std::unordered_map<std::string, std::vector<std::stri
         }
         output << "\n";
         output << "Rounds: " << rounds << "\n\n";
+        output << "Game State:\n";
+        // TODO: Add game state output
     }
 }
 
  GameResult Simulator::runSingleCompetitionGame(size_t map_idx, size_t algo1_idx, size_t algo2_idx){
     auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
-    
+
     try {
         // Get algorithm factories
         auto algo1_factory = algo_registrar.getAlgorithmAndPlayerFactory(algo1_idx);
@@ -708,9 +719,9 @@ void Simulator::logResults(std::unordered_map<std::string, std::vector<std::stri
             algo2_factory.getTankAlgorithmFactory());
 
         if (result.gameState == nullptr) {
-            std::cerr << "Warning: Game returned null result for map " 
-                     << map.name << " and algorithms " 
-                     << algo_registrar.getAlgorithmAndPlayerFactory(algo1_idx).name() << " vs " 
+            std::cerr << "Warning: Game returned null result for map "
+                     << map.name << " and algorithms "
+                     << algo_registrar.getAlgorithmAndPlayerFactory(algo1_idx).name() << " vs "
                      << algo_registrar.getAlgorithmAndPlayerFactory(algo2_idx).name() << std::endl;
             return {};
         }
@@ -730,7 +741,7 @@ void Simulator::logResults(std::unordered_map<std::string, std::vector<std::stri
     if(config_.mode == Competition){
         auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
         size_t num_algorithms = algo_registrar.count();
-        
+
         for (size_t map_idx = 0; map_idx < mapInfo_.size(); ++map_idx) {
             size_t k = map_idx % (num_algorithms - 1);
             for (size_t i = 0; i < num_algorithms; ++i) {
@@ -753,3 +764,12 @@ void Simulator::logResults(std::unordered_map<std::string, std::vector<std::stri
     // Total threads will be 1 (main) + worker_threads (>=2)
     return worker_threads + 1;
  }
+
+
+Simulator::~Simulator()
+{
+    // Clean up loaded libraries
+    GameManagerRegistrar::getGameManagerRegistrar().cleanup();
+    AlgorithmRegistrar::getAlgorithmRegistrar().cleanup();
+    mapInfo_.clear();
+}

@@ -1,4 +1,5 @@
 #include "../header/MapReader.h"
+#include <iostream>
 using namespace UserCommon__212535058_324022904;
 /**
  * @brief Reads and parses the game board from the input file.
@@ -31,7 +32,8 @@ GameMapInfo MapReader::readBoard(const string &filePath)
 		errorLog.close();
 		remove("input_errors.txt");
 	}
-
+	rows_=map_info.height;
+	cols_=map_info.width;
     return map_info;
 }
 
@@ -47,25 +49,23 @@ void MapReader::parseMetadata(ifstream &file, bool &hasErrors, ofstream &errorLo
 	for (int i = 0; i < 5; i++)
 	{
 		getline(file, line);
-		int temp;
+		//size_t temp;
 		if (line.empty() || line[0] == ';')
 			continue;
-		if (tryParseMetadata(line, "MaxSteps", temp, hasErrors, errorLog))
+		if (tryParseMetadata(line, "MaxSteps", map_info.max_steps, hasErrors, errorLog))
 			continue;
-        map_info.max_steps = static_cast<size_t>(temp);
-		if (tryParseMetadata(line, "NumShells", temp, hasErrors, errorLog))
+		if (tryParseMetadata(line, "NumShells", map_info.num_shells, hasErrors, errorLog))
 			continue;
-		map_info.num_shells = static_cast<size_t>(temp);
 
 		// For Rows/Cols, parse into temp int first to avoid size_t->int conversion issues
-		if (tryParseMetadata(line, "Rows", temp, hasErrors, errorLog))
+		if (tryParseMetadata(line, "Rows", map_info.height, hasErrors, errorLog))
 		{
-			map_info.height = static_cast<size_t>(temp);
+			//map_info.height = static_cast<size_t>(temp);
 			continue;
 		}
-		if (tryParseMetadata(line, "Cols", temp, hasErrors, errorLog))
+		if (tryParseMetadata(line, "Cols", map_info.width, hasErrors, errorLog))
 		{
-			map_info.width = static_cast<size_t>(temp);
+			//map_info.width = static_cast<size_t>(temp);
 			continue;
 		}
 
@@ -97,7 +97,7 @@ bool MapReader::hasAllMetadata(GameMapInfo& info) const
  * @param errorLog Output stream to log errors.
  * @return true if the key is found and value parsed successfully, false otherwise.
  */
-bool MapReader::tryParseMetadata(const string &line, const string &key, int &value, bool &hasErrors, ofstream &errorLog)
+bool MapReader::tryParseMetadata(const string &line, const string &key, size_t &value, bool &hasErrors, ofstream &errorLog)
 {
 	if (line.find(key) != string::npos)
 	{
@@ -188,3 +188,15 @@ void MapReader::checkExcessRows(ifstream &file, bool &hasErrors, ofstream &error
 		errorLog << extraRows << " excess rows found. Ignoring them.\n";
 	}
 }
+  string MapReader::gameStateToString(const SatelliteView &view){
+	string result;
+	for (size_t i = 0; i < rows_; ++i)
+	{
+		for (size_t j = 0; j < cols_; ++j)
+		{
+			result += view.getObjectAt(i, j);
+		}
+		result += '\n';
+	}
+	return result;
+  }

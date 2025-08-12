@@ -31,6 +31,10 @@ struct Config {
   std::unordered_map<std::string, std::string> arguments;
   int num_threads = 1;
   bool verbose = false;
+
+  ~Config() {
+    arguments.clear();  // Ensure map is cleared
+}
 };
 
 class Simulator
@@ -41,7 +45,7 @@ public:
   Simulator() {};
   Simulator(Simulator const &) = delete;
   Simulator &operator=(const Simulator &) = delete;
-  ~Simulator() {}
+  ~Simulator();
   bool initGame(const std::vector<std::string> &folderPath);
   bool initGame_(int argc, char* argv[]);
   void run();
@@ -49,6 +53,8 @@ public:
 private:
   Config config_;
   vector<GameMapInfo> mapInfo_;
+      MapReader reader = MapReader();
+
 
   bool loadAllFromDirectory(const std::string &dirPath, bool isGameManager);
 
