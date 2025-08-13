@@ -14,7 +14,7 @@ USER_COMMON_SRC := $(USER_COMMON_DIR)/Shell.cpp $(USER_COMMON_DIR)/Wall.cpp $(US
 # COMMON_SRC := $(COMMON_DIR)/PlayerRegistration.cpp $(COMMON_DIR)/TankAlgorithmRegistration.cpp $(COMMON_SRC)
 
 # Target
-TARGET := $(BUILD_DIR)/Algorithm.so
+TARGET := $(BUILD_DIR)/Algorithm_212535058_324022904.so
 
 # Ensure the build directory exists
 $(shell mkdir -p $(BUILD_DIR))
@@ -27,4 +27,4 @@ $(TARGET): $(PLAYER_SRC) $(TANK_SRC) $(USER_COMMON_SRC)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o $@
 
 clean:
-	rm -rf $(BUILD_DIR)/Algorithm.so
+	rm -rf $(TARGET)
