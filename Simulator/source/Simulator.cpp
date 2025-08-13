@@ -627,8 +627,8 @@ GameResult Simulator::runSingleComparativeGame(int manager_number)
         }
 
         auto &map = mapInfo_.at(0);
-        auto player1 = algo1_player_factory.createPlayer(1, map.width, map.height, map.max_steps, map.num_shells);
-        auto player2 = algo2_player_factory.createPlayer(2, map.width, map.height, map.max_steps, map.num_shells);
+        auto player1 = algo1_player_factory.createPlayer(1,map.height, map.width, map.max_steps, map.num_shells);
+        auto player2 = algo2_player_factory.createPlayer(2, map.height, map.width, map.max_steps, map.num_shells);
 
         // bool check = (algo1_player_factory.getTankAlgorithmFactory().target_type() == algo2_player_factory.getTankAlgorithmFactory().target_type());
         // Run the game
@@ -773,7 +773,7 @@ void Simulator::logResults(std::unordered_map<std::string, std::vector<std::stri
     if (worker_threads == 1) {
         return 1;
     }
-    std::cerr << worker_threads << std::endl;
+    //std::cerr << worker_threads << std::endl;
     // Total threads will be 1 (main) + worker_threads (>=2)
     return worker_threads + 1;
  }
