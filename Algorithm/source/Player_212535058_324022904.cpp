@@ -19,7 +19,7 @@ REGISTER_PLAYER(Player_212535058_324022904);
  * Constructor for AdvancedPlayer.
  * Initializes the player with map size, max steps, and number of shells.
  */
-Player_212535058_324022904::Player_212535058_324022904(int player_index, size_t map_width, size_t map_height, size_t max_steps, size_t num_shells)
+Player_212535058_324022904::Player_212535058_324022904(int player_index, size_t map_height, size_t map_width, size_t max_steps, size_t num_shells)
 : player_index(player_index), map_width(map_width), map_height(map_height), steps_left(static_cast<int>(max_steps)),
     shells_per_tank(num_shells), battle_info(make_unique<TankBattleInfo>(-1, player_index)) {}
 
