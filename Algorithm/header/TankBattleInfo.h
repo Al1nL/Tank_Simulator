@@ -33,6 +33,7 @@ namespace Algorithm_212535058_324022904
         bool moved_backward_last = false; // Indicates immediate next back is allowed
         vector<OppData> opponents;
         map<pair<int, int>, vector<GameObject *>> knownObjects;
+        std::vector<std::unique_ptr<GameObject>> objectStorage;
 
         bool set_shells = false;
         pair<int, int> map_size = {-1, -1};
@@ -40,7 +41,10 @@ namespace Algorithm_212535058_324022904
     public:
         TankBattleInfo(int tank_index, int player_id);
         ~TankBattleInfo() override = default;
-
+        // Block copy operations
+        TankBattleInfo(const TankBattleInfo&) = delete;
+        TankBattleInfo& operator=(const TankBattleInfo&) = delete;
+    
         void setBackwardCooldown(int cooldown = 2);
 
         void setWaitingForBackward(bool);
@@ -67,7 +71,13 @@ namespace Algorithm_212535058_324022904
 
         void setOpponents(vector<OppData> opps);
         void addOpponent(pair<int, int> position, Direction dir = Direction::None);
-
+  std::vector<std::unique_ptr<GameObject>> takeObjectStorage();
+    
+    // Modified to accept rvalue references
+    void setFrameObjects(
+        std::map<std::pair<int,int>, std::vector<GameObject*>>&& newKnownObjects,
+        std::vector<std::unique_ptr<GameObject>>&& newStorage
+    );
         GameObject *getObjectByPosition(pair<int, int> pos) const;
 
         map<pair<int, int>, vector<GameObject *>> getKnownObjects() const;

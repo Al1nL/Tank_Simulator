@@ -22,11 +22,14 @@ MyTankAlgorithm::MyTankAlgorithm(int player_index, int tank_index) : player_inde
  */
 void MyTankAlgorithm::updateBattleInfo(BattleInfo &info)
 {
-	auto tank_info = dynamic_cast<TankBattleInfo &>(info);
+	auto& tank_info = dynamic_cast<TankBattleInfo &>(info);
 	battle_info->setOpponents(tank_info.getOpponents());
 	battle_info->setPosition(tank_info.getPosition().first, tank_info.getPosition().second);
 	battle_info->setDirection(tank_info.getDirection());
-	battle_info->setKnownObjects(tank_info.getKnownObjects());
+	battle_info->setFrameObjects(
+		tank_info.getKnownObjects(),          // raw pointer map
+		tank_info.takeObjectStorage()         // unique_ptr storage (moved)
+	);
 	battle_info->setRemainingShells(tank_info.getRemainingShells());
 	battle_info->setMapSize(tank_info.getMapSize().first, tank_info.getMapSize().second);
 }
@@ -246,6 +249,9 @@ bool MyTankAlgorithm::willBeHitIn(int row, int col, int t)
 			continue;
 
 		auto object = objects.size() > 1 ? objects[1] : objects[0];
+		if (object == nullptr) {
+            continue;
+        }
 		char symbol = object->getSymbol();
 		if (symbol != '*')
 			continue;

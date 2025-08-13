@@ -26,7 +26,9 @@ namespace UserCommon__212535058_324022904 {
 
         Tank(Tank const &) = delete;
         Tank &operator=(const Tank &) = delete;
-
+        std::unique_ptr<GameObject> clone() const override {
+            return std::make_unique<Tank>(getPos(), tank_index, direction, ownerId, remaining_shells);
+        }
         void destroy() override;
         bool isDestroyed() const override;
         bool isBackLastMove() { return last_action == ActionRequest::MoveBackward; }

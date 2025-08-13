@@ -15,6 +15,25 @@ using namespace Algorithm_212535058_324022904;
     direction = player_id == 1 ? L : R;
 }
 
+vector<std::unique_ptr<GameObject>> TankBattleInfo::takeObjectStorage() {
+    vector<std::unique_ptr<GameObject>> newStorage;
+    for (auto& obj : objectStorage) {
+        if (obj) {
+            newStorage.push_back(obj->clone());  // Safe: deep copy
+        }
+    }
+    return newStorage;
+}
+void TankBattleInfo::setFrameObjects(
+    std::map<std::pair<int,int>, std::vector<GameObject*>>&& newKnownObjects,
+    std::vector<std::unique_ptr<GameObject>>&& newStorage
+) {
+    knownObjects.clear(); // Clear existing known objects
+    knownObjects = std::move(newKnownObjects);
+    objectStorage.clear(); // Clear existing storage
+    objectStorage = std::move(newStorage);
+}
+
 /**
  * @brief Set the cooldown until backward movement can occur.
  */

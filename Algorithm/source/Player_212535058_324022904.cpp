@@ -216,7 +216,7 @@ void Player_212535058_324022904::getBattleInfoFromSatelliteView(SatelliteView &v
         }
     }
 
-    tank_info->setKnownObjects(knownObjects);
+    tank_info->setFrameObjects(move(knownObjects), move(objectStorage));
     tank_info->setOpponents(opponents);
 }
 

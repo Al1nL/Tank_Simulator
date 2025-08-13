@@ -22,6 +22,9 @@ namespace UserCommon__212535058_324022904 {
             if (hitCount == WALL_MAX_HITS)
                 destroy();
         }
+        std::unique_ptr<GameObject> clone() const override {
+            return std::make_unique<Wall>(getPos());
+        }
         int getHitCount() const;
         void registerHit();
         void destroy() override;

@@ -307,8 +307,11 @@ void TankAlgorithm_212535058_324022904::moveKnownShells()
 			}
 			++it;
 		}
+	// Check if the vector is empty after processing all objects
+        if (copyKnownObj[pos].empty()) {
+            pos_to_del.push_back(pos);
+        }
 	}
-
     for(auto pos : pos_to_del) {
       copyKnownObj.erase(pos);
     }

@@ -18,7 +18,9 @@ namespace UserCommon__212535058_324022904
 
         Shell(Shell const &) = delete;
         Shell &operator=(const Shell &) = delete;
-
+        std::unique_ptr<GameObject> clone() const override {
+            return std::make_unique<Shell>(getPos(), direction, ownerId);
+        }
         // Accessors
         Direction getDirection() const;
         void setDirection(Direction dir);

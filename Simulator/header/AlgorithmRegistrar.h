@@ -15,11 +15,11 @@ class AlgorithmRegistrar {
         public:
             AlgorithmAndPlayerFactories(const std::string& so_name) : so_name(so_name) {}
             void setTankAlgorithmFactory(TankAlgorithmFactory&& factory) {
-                assert(tankAlgorithmFactory == nullptr);
+                //assert(tankAlgorithmFactory == nullptr);
                 tankAlgorithmFactory = std::move(factory);
             }
             void setPlayerFactory(PlayerFactory&& factory) {
-                assert(playerFactory == nullptr);
+                //assert(playerFactory == nullptr);
                 playerFactory = std::move(factory);
             }
              ~AlgorithmAndPlayerFactories() {

@@ -2,6 +2,8 @@
 #define GAMEOBJECT_H
 #include <utility>
 #include <vector>
+#include <memory>  // For std::unique_ptr
+
 
 namespace UserCommon__212535058_324022904
 {
@@ -36,12 +38,14 @@ namespace UserCommon__212535058_324022904
     public:
         GameObject() = default;
         GameObject(pair<int, int> pos) : pos(pos) {}
+            virtual std::unique_ptr<GameObject> clone() const = 0;  // Pure virtual clone()
+
         virtual ~GameObject() {};
         GameObject(GameObject const &) = delete;
         GameObject &operator=(const GameObject &) = delete;
         virtual bool isDestroyed() const = 0;
         virtual void destroy() = 0;
-        virtual pair<int, int> getPos() { return pos; }
+        const pair<int, int> getPos() const { return pos; }
         virtual void setPos(pair<int, int> position) { pos = position; }
         virtual char getSymbol() const { return ' '; }
     };

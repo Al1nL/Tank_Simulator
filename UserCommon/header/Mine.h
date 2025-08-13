@@ -17,7 +17,9 @@ namespace UserCommon__212535058_324022904
 
         Mine(Mine const &) = delete;
         Mine &operator=(const Mine &) = delete;
-
+        std::unique_ptr<GameObject> clone() const override {
+            return std::make_unique<Mine>(getPos());
+        }
         void trigger();
         bool isTriggered() const;
         void destroy() override;
