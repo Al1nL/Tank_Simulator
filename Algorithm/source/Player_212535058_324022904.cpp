@@ -7,6 +7,7 @@
 #include "../../UserCommon/header/Mine.h"
 #include "../../UserCommon/header/Wall.h"
 #include "../header/TankBattleInfo.h"
+#include <iostream>
 
 using namespace UserCommon__212535058_324022904;
 using namespace Algorithm_212535058_324022904;
@@ -119,7 +120,7 @@ vector<Shell *> Player_212535058_324022904::getShellsFromKnownObjects()
     {
         for (auto &obj : objs)
         {
-            if (obj->getSymbol() == '*')
+            if (obj && obj->getSymbol() == '*')
             {
                 auto shell = dynamic_cast<Shell *>(obj);
                 if (shell)
@@ -147,7 +148,7 @@ void Player_212535058_324022904::getBattleInfoFromSatelliteView(SatelliteView &v
     vector<OppData> opponents;
     map<pair<int, int>, vector<GameObject *>> knownObjects = tank_info->getKnownObjects();
     // This will own all the game objects
-    static vector<unique_ptr<GameObject>> objectStorage;
+    vector<unique_ptr<GameObject>> objectStorage;
 
     if (!tank_info->isShellsSet())
         tank_info->setRemainingShells(shells_per_tank);

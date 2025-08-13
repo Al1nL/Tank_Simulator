@@ -52,7 +52,7 @@ bool Simulator::initializeComparativeMode()
                   << config_.arguments["game_managers_folder"] << std::endl;
         return false;
     }
-
+    config_.num_threads = computeThreadCount();
     return true;
 }
 
@@ -64,6 +64,10 @@ bool Simulator::initializeCompetitionMode()
         return false;
     }
 
+    if (!loadAllMaps(config_.arguments["game_maps_folder"]))
+    {
+        return false;
+    }
     // Load all algorithms from the folder
     size_t algorithm_count = 0;
     for (const auto &entry : fs::directory_iterator(config_.arguments["algorithms_folder"]))
@@ -83,7 +87,7 @@ bool Simulator::initializeCompetitionMode()
                   << algorithm_count << std::endl;
         return false;
     }
-
+    config_.num_threads = computeThreadCount();
     return true;
 }
 
@@ -143,14 +147,14 @@ bool Simulator::loadAlgorithm(const std::string &path)
 
     // Check if we already loaded this exact file
     bool isRegistred = false;
-    for (const auto& entry : registrar) {
-        if (entry.name() == baseName) {
+    int size = registrar.count();
+    for (int i = 0; i < size; i++) {
+        auto algo = registrar.getAlgorithmAndPlayerFactory(i);
+        if (algo.name() == baseName) {
             // Create new entry with same factories
             registrar.createAlgorithmFactoryEntry(baseName);
-            TankAlgorithmFactory tank_dup = [factory = entry.getTankAlgorithmFactory()]
-                                          (int p, int t) { return factory(p, t); };
-            registrar.addTankAlgorithmFactoryToLastEntry(std::move(tank_dup));
-            registrar.addPlayerFactoryToLastEntry(entry.getPlayerFactory());
+            registrar.addTankAlgorithmFactoryToLastEntry( algo.getTankAlgorithmFactory());
+            registrar.addPlayerFactoryToLastEntry(algo.getPlayerFactory());
             isRegistred = true;
             break;
         }
@@ -159,17 +163,20 @@ bool Simulator::loadAlgorithm(const std::string &path)
     // Otherwise, load it fresh
     if(!isRegistred){
         registrar.createAlgorithmFactoryEntry(baseName);
+
         void *handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_LOCAL);
+
         if (!handle)
         {
             std::cerr << "Failed to load Algorithm " << path << ": " << dlerror() << std::endl;
             registrar.removeLast();
             return false;
         }
+        // registrar.setHandleToLastEntry(make_shared_dl(handle));
     }
-    //registrar.setHandleToLastEntry(handle);
+
     dlerror(); // Clear errors
-        
+
     try
     {
         registrar.validateLastRegistration();
@@ -190,6 +197,7 @@ bool Simulator::loadAlgorithm(const std::string &path)
 
 bool Simulator::loadAllMaps(const std::string &path)
 {
+    //MapReader reader;
     if (!fs::is_directory(path))
     {
         auto map = reader.readBoard(path);
@@ -386,8 +394,10 @@ void Simulator::run()
     if (config_.mode == Comparative)
     {
         runComparative();
+    }else{
+        runCompetition();
     }
-    runCompetition();
+    
 }
 
 void Simulator::runComparative()
@@ -460,6 +470,7 @@ void Simulator::runComparative()
         result_groups[key].push_back(gm_registrar.getGameManager(manager_idx).getName());
     }
 
+    std::cout << "Here: " << output_path << "\n";
     logResults(result_groups, out_file); //::move(out_file));
     if (write_to_file)
     {
@@ -468,7 +479,102 @@ void Simulator::runComparative()
     }
 }
 
-void Simulator::runCompetition() { return; }
+void Simulator::runCompetition() {
+
+    // Check we have enough algorithms and maps
+    auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
+    size_t num_algorithms = algo_registrar.count();
+
+    // Prepare output filename with timestamp
+    auto now = std::chrono::system_clock::now();
+    auto time_str = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                      now.time_since_epoch())
+                                      .count());
+    fs::path output_path = fs::path(config_.arguments["algorithms_folder"]) /
+                          ("competition_results_" + time_str + ".txt");
+
+    // Try to open output file
+    std::ofstream out_file;
+    out_file.open(output_path);
+    bool write_to_file = out_file.is_open();
+
+    if (!write_to_file) {
+        std::cerr << "Error: Could not create output file at " << output_path
+                  << ". Results will be printed to screen instead.\n\n";
+    }
+
+    // Write header information
+    auto& output = write_to_file ? out_file : std::cout;
+    output << "game_maps_folder=" << config_.arguments["game_maps_folder"] << "\n";
+    output << "game_manager=" << config_.arguments["game_manager"] << "\n\n";
+
+
+    // Prepare results storage
+    std::vector<int> algorithm_scores(num_algorithms, 0);
+    std::mutex scores_mutex;
+
+    // Create thread pool
+    ThreadPool pool(config_.num_threads);
+    // Process each map
+    for (size_t map_idx = 0; map_idx < mapInfo_.size(); ++map_idx) {
+        std::cerr << "the map: " << map_idx << std::endl;
+        size_t k = map_idx % (num_algorithms - 1);
+
+        // Create all pairs for this map
+        for (size_t i = 0; i < num_algorithms; ++i) {
+            size_t j = (i + 1 + k) % num_algorithms;
+
+            // Skip duplicate pairs when N is even and k = N/2 - 1
+            if (num_algorithms % 2 == 0 && k == (num_algorithms / 2 - 1) && i >= j) {
+                continue;
+            }
+
+             // Enqueue the game
+            pool.enqueue([this, map_idx, i, j, &algorithm_scores, &scores_mutex]() {
+                GameResult result = runSingleCompetitionGame(map_idx, i, j);
+
+                if (result.gameState == nullptr) {
+                    std::cerr << "Warning: Game returned null result!" << std::endl;
+                    return; // Skip invalid results
+                }
+
+                // Update scores
+                std::lock_guard<std::mutex> lock(scores_mutex);
+                if (result.winner == 0) { // Tie
+                    algorithm_scores[i] += 1;
+                    algorithm_scores[j] += 1;
+                } else if (result.winner == 1) {
+                    algorithm_scores[i] += 3;
+                } else if (result.winner == 2) {
+                    algorithm_scores[j] += 3;
+                }
+            });
+        }
+    }
+
+    // Wait for all games to complete
+    pool.waitAll();
+
+    // Prepare final results sorted by score
+    std::vector<std::pair<std::string, int>> final_results;
+    for (size_t i = 0; i < num_algorithms; ++i) {
+        final_results.emplace_back(algo_registrar.getAlgorithmAndPlayerFactory(i).name(), algorithm_scores[i]);
+    }
+
+    // Sort results by score (descending)
+    std::sort(final_results.begin(), final_results.end(),
+              [](const auto& a, const auto& b) { return b.second < a.second; });
+
+    // Output final results
+    for (const auto& [name, score] : final_results) {
+        output << name << " " << score << "\n";
+    }
+
+    if (write_to_file) {
+        out_file.close();
+        std::cout << "Results written to: " << output_path << "\n";
+    }
+ }
 
 std::string Simulator::getBaseName(const std::string &filename)
 {
@@ -523,8 +629,8 @@ GameResult Simulator::runSingleComparativeGame(int manager_number)
         auto &map = mapInfo_.at(0);
         auto player1 = algo1_player_factory.createPlayer(1, map.width, map.height, map.max_steps, map.num_shells);
         auto player2 = algo2_player_factory.createPlayer(2, map.width, map.height, map.max_steps, map.num_shells);
-        
-        bool check = (algo1_player_factory.getTankAlgorithmFactory().target_type() == algo2_player_factory.getTankAlgorithmFactory().target_type());
+
+        // bool check = (algo1_player_factory.getTankAlgorithmFactory().target_type() == algo2_player_factory.getTankAlgorithmFactory().target_type());
         // Run the game
         GameResult result = game_manager->run(map.width, map.height,
                                               *map.map, map.name, map.max_steps, map.num_shells,
@@ -589,6 +695,89 @@ void Simulator::logResults(std::unordered_map<std::string, std::vector<std::stri
         output << game_state;
     }
 }
+
+ GameResult Simulator::runSingleCompetitionGame(size_t map_idx, size_t algo1_idx, size_t algo2_idx){
+    auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
+
+    try {
+        // Get algorithm factories
+        auto algo1_factory = algo_registrar.getAlgorithmAndPlayerFactory(algo1_idx);
+        auto algo2_factory = algo_registrar.getAlgorithmAndPlayerFactory(algo2_idx);
+
+        // Get game manager factory
+        auto& gm_registrar = GameManagerRegistrar::getGameManagerRegistrar();
+        auto game_manager_factory = gm_registrar.getGameManager(0).getFactory();
+        if (!game_manager_factory) {
+            std::cerr << "Failed to create game manager factory" << std::endl;
+            return {};
+        }
+
+        // Create game manager instance
+        auto game_manager = game_manager_factory(config_.verbose);
+        if (!game_manager) {
+            std::cerr << "Failed to create game manager instance" << std::endl;
+            return {};
+        }
+
+        // Create players
+        const auto& map = mapInfo_[map_idx];
+        auto player1 = algo1_factory.createPlayer(1, map.width, map.height,  map.max_steps, map.num_shells);
+        auto player2 = algo2_factory.createPlayer(2, map.width, map.height, map.max_steps, map.num_shells);
+
+        // Run the game
+        GameResult result = game_manager->run(
+            map.width, map.height, *map.map, map.name, map.max_steps, map.num_shells,
+            *player1, algo_registrar.getAlgorithmAndPlayerFactory(algo1_idx).name(),
+            *player2, algo_registrar.getAlgorithmAndPlayerFactory(algo2_idx).name(),
+            algo1_factory.getTankAlgorithmFactory(),
+            algo2_factory.getTankAlgorithmFactory());
+
+        if (result.gameState == nullptr) {
+            std::cerr << "Warning: Game returned null result for map "
+                     << map.name << " and algorithms "
+                     << algo_registrar.getAlgorithmAndPlayerFactory(algo1_idx).name() << " vs "
+                     << algo_registrar.getAlgorithmAndPlayerFactory(algo2_idx).name() << std::endl;
+            return {};
+        }
+        return result;
+    } catch (const std::exception& e) {
+        std::cerr << "Error running game: " << e.what() << std::endl;
+        return {};
+    }
+ }
+
+ int Simulator::computeThreadCount() const {
+    size_t requested_threads = config_.num_threads;
+
+    // Calculate total number of games
+    size_t total_games = 0;
+    if(config_.mode == Competition){
+        auto& algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
+        size_t num_algorithms = algo_registrar.count();
+
+        for (size_t map_idx = 0; map_idx < mapInfo_.size(); ++map_idx) {
+            size_t k = map_idx % (num_algorithms - 1);
+            for (size_t i = 0; i < num_algorithms; ++i) {
+                size_t j = (i + 1 + k) % num_algorithms;
+                if (!(num_algorithms % 2 == 0 && k == (num_algorithms / 2 - 1) && i >= j)) {
+                    total_games++;
+                }
+            }
+        }
+    }else{
+        auto &gm_registrar = GameManagerRegistrar::getGameManagerRegistrar();
+        total_games = gm_registrar.count();
+    }
+
+    size_t worker_threads = std::min(requested_threads - 1, total_games - 1);
+    if (worker_threads == 1) {
+        return 1;
+    }
+    std::cerr << worker_threads << std::endl;
+    // Total threads will be 1 (main) + worker_threads (>=2)
+    return worker_threads + 1;
+ }
+
 
 Simulator::~Simulator()
 {
