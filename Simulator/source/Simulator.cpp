@@ -518,6 +518,7 @@ void Simulator::runCompetition() {
     ThreadPool pool(config_.num_threads);
     // Process each map
     for (size_t map_idx = 0; map_idx < mapInfo_.size(); ++map_idx) {
+        std::cerr << "the map: " << map_idx << std::endl;
         size_t k = map_idx % (num_algorithms - 1);
 
         // Create all pairs for this map
