@@ -279,7 +279,7 @@ namespace GameManager_212535058_324022904
             {
                 if (tank->isKilledThisRound())
                 {
-                    actions.push_back(tank->getActionSuccess() ? move + " (killed)" : " (ignored) (killed)");
+                    actions.push_back(tank->getActionSuccess() ? move + " (killed)" : move + " (ignored) (killed)");
                     tank->setKilledThisRound(false);
                 }
                 else
