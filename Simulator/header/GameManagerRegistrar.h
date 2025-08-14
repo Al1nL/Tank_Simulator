@@ -22,7 +22,7 @@ class GameManagerRegistrar {
             : so_name(name), library_handle(handle) {}
 
         void setFactory(GameManagerFactory&& f) {
-            assert(factory == nullptr);
+            // assert(factory == nullptr);
             factory = std::move(f);
         }
         void setHandle(void* handle) {
@@ -119,10 +119,12 @@ public:
     void cleanup() {
         std::lock_guard<std::mutex> lock(mutex);
         for (auto& entry : game_managers) {
+            entry.setFactory(GameManagerFactory{}); // assign empty std::function
+
             if (entry.getHandle()) {
                 dlclose(entry.getHandle());
                 entry.setHandle(nullptr);
-
+                
             }
         }
         game_managers.clear();
