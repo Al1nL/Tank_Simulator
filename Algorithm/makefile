@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX := g++
-CXXFLAGS := -std=c++20 -fPIC -Wall -Wextra -g -O0 -Icommon
+CXXFLAGS := -std=c++20 -fPIC -Wall -Wextra -Icommon -fvisibility=hidden
 LDFLAGS := -shared -ldl -Wl,--export-dynamic
 
 # Source files

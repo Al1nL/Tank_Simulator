@@ -1,6 +1,5 @@
 #include "../header/TankBattleInfo.h"
 #include "../../UserCommon/header/Shell.h"
-#include <iostream>
 using namespace UserCommon__212535058_324022904;
 using namespace Algorithm_212535058_324022904;
 
