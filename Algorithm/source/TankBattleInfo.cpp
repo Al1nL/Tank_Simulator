@@ -1,6 +1,6 @@
 #include "../header/TankBattleInfo.h"
 #include "../../UserCommon/header/Shell.h"
-
+#include <iostream>
 using namespace UserCommon__212535058_324022904;
 using namespace Algorithm_212535058_324022904;
 
@@ -29,9 +29,9 @@ void TankBattleInfo::setFrameObjects(
     std::vector<std::unique_ptr<GameObject>>&& newStorage
 ) {
     knownObjects.clear(); // Clear existing known objects
-    knownObjects = std::move(newKnownObjects);
     objectStorage.clear(); // Clear existing storage
     objectStorage = std::move(newStorage);
+    knownObjects = std::move(newKnownObjects);
 }
 
 /**
@@ -158,7 +158,13 @@ GameObject *TankBattleInfo::getObjectByPosition(pair<int, int> pos) const
  */
 map<pair<int, int>, vector<GameObject *>> TankBattleInfo::getKnownObjects() const
 {
-    return knownObjects;
+     std::map<std::pair<int,int>, std::vector<GameObject*>> copy;
+    for (const auto& [pos, objects] : knownObjects) {
+        for (auto* obj : objects) {
+            if (obj) copy[pos].push_back(obj->clone().release());  // Requires GameObject::clone()
+        }
+    }
+    return copy;
 }
 
 /**

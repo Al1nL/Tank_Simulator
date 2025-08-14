@@ -242,13 +242,15 @@ ActionRequest MyTankAlgorithm::checkForEscape()
  */
 bool MyTankAlgorithm::willBeHitIn(int row, int col, int t)
 {
-	auto knownObjects = battle_info->getKnownObjects();
-	for (auto &[pos, objects] : knownObjects)
+	
+	const auto knownObjects = battle_info->getKnownObjects();
+	
+	for (const auto &[pos, objects] : knownObjects)
 	{
 		if (objects.empty())
 			continue;
 
-		auto object = objects.size() > 1 ? objects[1] : objects[0];
+		auto object = (objects.size() > 1 ? objects[1] : objects[0]);
 		if (object == nullptr) {
             continue;
         }
@@ -257,7 +259,7 @@ bool MyTankAlgorithm::willBeHitIn(int row, int col, int t)
 			continue;
 
 		auto [sr, sc] = pos;
-		Direction dir = dynamic_cast<Shell *>(object)->getDirection();
+		Direction dir = dynamic_cast<Shell*>(object)->getDirection();
 
 		for (int i = 0; i <= 2 && dir != None; i++)
 		{
