@@ -15,24 +15,20 @@ SRCS := \
     Simulator/source/TankAlgorithmRegistration.cpp \
     Simulator/source/MapReader.cpp
 
-# Object files
-OBJS := $(SRCS:.cpp=.o)
-
 # Build rules
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OBJS) $(LDFLAGS) -o $@  # <-- TAB
-
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@  # <-- TAB
+$(TARGET): $(SRCS)
+	@echo "Compiling and linking $@"
+	$(CXX) $(CXXFLAGS) $(SRCS) $(LDFLAGS) -o $@
 
 clean:
-	rm -f $(OBJS) $(TARGET)  # <-- TAB
+	rm -f $(TARGET)
+	@echo "Cleaned build files"
 
 # Special rule to verify debug symbols
 check-symbols: $(TARGET)
 	@echo "Checking debug symbols..."
-	@readelf --debug-dump $(TARGET) | head -20 || objdump --syms $(TARGET) | grep debug  # <-- TAB
+	@readelf --debug-dump $(TARGET) | head -20 || objdump --syms $(TARGET) | grep debug
 
 .PHONY: all clean check-symbols
