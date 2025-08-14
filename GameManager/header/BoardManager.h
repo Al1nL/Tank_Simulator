@@ -1,5 +1,8 @@
 #ifndef BOARDMANAGER_H
 #define BOARDMANAGER_H
+#include <filesystem>
+namespace fs = std::filesystem;
+
 #include "../../UserCommon/header/GameObject.h"
 #include "../../UserCommon/header/Tank.h"
 #include "../../UserCommon/header/Shell.h"

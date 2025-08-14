@@ -45,7 +45,16 @@ namespace GameManager_212535058_324022904
      */
     void BoardManager::writeBoardStates(string fileName)
     {
-        ofstream outFile("gameSteps_" + fileName);
+        // Get directory from GameManager output_file (assuming you have access to it)
+        std::string dir = fs::path(fileName).parent_path().string();
+        fileName = fs::path(fileName).filename().string();
+        // Make sure directory exists
+        //fs::create_directories(dir);
+
+        // Build full path
+        std::string fullPath = dir + "/gameSteps_" + fileName;
+
+        ofstream outFile(fullPath);
         if (!outFile.is_open())
         {
             cerr << "Error: Could not open file for writing!" << endl;
