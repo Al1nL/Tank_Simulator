@@ -147,8 +147,9 @@ namespace GameManager_212535058_324022904
                     shellPtr = std::move(game_map[oldPos.first][oldPos.second][1]);
                     game_map[oldPos.first][oldPos.second].erase(game_map[oldPos.first][oldPos.second].begin() + 1);
                 }
-                else
+                else{
                     shellPtr = std::move(game_map[oldPos.first][oldPos.second][0]);
+                }
 
                 // std::move to new position using updateMap
                 updateMap(std::move(shellPtr), newPos);
@@ -219,11 +220,11 @@ namespace GameManager_212535058_324022904
 
                         for (auto &obj : cell)
                         {
-                            if (dynamic_cast<Shell *>(obj.get()))
+                            if (obj && dynamic_cast<Shell *>(obj.get()))
                             {
                                 hasShell = true;
                             }
-                            else if (dynamic_cast<Wall *>(obj.get()) || dynamic_cast<Mine *>(obj.get()))
+                            else if (obj && (dynamic_cast<Wall *>(obj.get()) || dynamic_cast<Mine *>(obj.get())))
                             {
                                 hasWallOrMine = true;
                             }

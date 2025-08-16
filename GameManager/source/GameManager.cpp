@@ -140,6 +140,10 @@ namespace GameManager_212535058_324022904
         for (auto tank : tanks)
         {
             // Get action from algorithm
+            if(tank->isDestroyed()) {
+                actionRequests[tank] = ActionRequest::DoNothing;
+                continue;
+            }
             TankAlgorithm *tankPtr = findTankAlgorithmById(tank);
             ActionRequest action = tankPtr->getAction();
             actionRequests[tank] = action;
