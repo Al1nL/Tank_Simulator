@@ -24,6 +24,7 @@ namespace GameManager_212535058_324022904
         current_step = 0;
         num_shells = numShells;
         steps_since_no_shells = 0;
+        std::cerr << map_name << " - " << name1 << " vs " << name2 << std::endl;
         // Initialize board and tanks
         players.push_back(&player1);
         players.push_back(&player2);
@@ -389,9 +390,18 @@ namespace GameManager_212535058_324022904
             out << line << "\n";
         }
     }
-    void GameManager::setupOutputFile(const string &filePath, const string &name1, const string &name2)
+
+    void GameManager::setupOutputFile(const std::string &filePath,
+                                      const std::string &name1,
+                                      const std::string &name2)
     {
+        std::string dir = "GM_212535058_324022904_Results";
+
+        // Create directory if it doesn't exist
+        fs::create_directories(dir);
+
         size_t last_slash = filePath.find_last_of("/\\");
-        output_file = "output_GM_212535058_324022904_P1_" + name1 + "_P2_" + name2 + "_" + (last_slash == string::npos ? filePath : filePath.substr(last_slash + 1)); // string::npos = “not found”
+        output_file = dir + "/output_P1_" +
+                      name1 + "_P2_" + name2 + "_" + (last_slash == std::string::npos ? filePath : filePath.substr(last_slash + 1));
     }
 }
