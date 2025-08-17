@@ -1,5 +1,7 @@
 #ifndef GAMEMANAGER
 #define GAMEMANAGER
+    #include <filesystem>
+namespace fs = std::filesystem;
 
 #include "../../common/AbstractGameManager.h"
 #include "../../common/GameResult.h"
