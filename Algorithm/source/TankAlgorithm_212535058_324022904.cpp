@@ -59,8 +59,7 @@ ActionRequest TankAlgorithm_212535058_324022904::decideAction() {
 			return res;
 		if(battle_info->getRemainingShells() > 0 && !battle_info->isWaitingToShoot())
 			return ActionRequest::Shoot;
-		}
-
+	}
 	if(willBeHitIn(battle_info->getPosition().first,battle_info->getPosition().second,2)) {
 		ActionRequest res;
 		res =calculateBestEscapeRotation();
@@ -73,9 +72,10 @@ ActionRequest TankAlgorithm_212535058_324022904::decideAction() {
 		}
 	}
 
+
     // Shoot if aligned and safe
-    if (shouldShootOpponent(opp)){
-		return  ActionRequest::Shoot;
+    if (shouldShootOpponent(opp) && !battle_info->isWaitingToShoot()) {
+        return  ActionRequest::Shoot;
     }
 
 	if(current_turn - last_info_update > tank_index + 4){
@@ -97,11 +97,8 @@ ActionRequest TankAlgorithm_212535058_324022904::decideAction() {
     }
 
     // Default fallback ActionRequest
-	ActionRequest escapeRotation = calculateBestEscapeRotation();
-	if (escapeRotation != ActionRequest::DoNothing) {
-		return escapeRotation;
-	}
-	return ActionRequest::GetBattleInfo;
+    ActionRequest r =calculateBestEscapeRotation();
+    return r == ActionRequest::DoNothing ? ActionRequest::GetBattleInfo : r;
 }
 
 

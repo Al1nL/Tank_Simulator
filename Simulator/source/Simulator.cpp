@@ -630,7 +630,6 @@ GameResult Simulator::runSingleComparativeGame(int manager_number)
         auto player1 = algo1_player_factory.createPlayer(1,map.height, map.width, map.max_steps, map.num_shells);
         auto player2 = algo2_player_factory.createPlayer(2, map.height, map.width, map.max_steps, map.num_shells);
 
-        // bool check = (algo1_player_factory.getTankAlgorithmFactory().target_type() == algo2_player_factory.getTankAlgorithmFactory().target_type());
         // Run the game
         GameResult result = game_manager->run(map.width, map.height,
                                               *map.map, map.name, map.max_steps, map.num_shells,
@@ -721,8 +720,8 @@ void Simulator::logResults(std::unordered_map<std::string, std::vector<std::stri
 
         // Create players
         const auto& map = mapInfo_[map_idx];
-        auto player1 = algo1_factory.createPlayer(1, map.width, map.height,  map.max_steps, map.num_shells);
-        auto player2 = algo2_factory.createPlayer(2, map.width, map.height, map.max_steps, map.num_shells);
+        auto player1 = algo1_factory.createPlayer(1, map.height,map.width,   map.max_steps, map.num_shells);
+        auto player2 = algo2_factory.createPlayer(2, map.height,map.width,  map.max_steps, map.num_shells);
 
         // Run the game
         GameResult result = game_manager->run(
