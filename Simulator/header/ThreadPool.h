@@ -13,9 +13,14 @@ class ThreadPool {
     std::mutex queue_mutex;
     std::condition_variable condition;
     bool stop = false;
+    const size_t thread_count;
 
 public:
-    explicit ThreadPool(size_t threads) {
+    explicit ThreadPool(size_t threads) : thread_count(threads){
+        if (threads == 1) {
+            // Don't create any worker threads for sequential mode
+            return;
+        }
         for (size_t i = 0; i < threads; ++i) {
             workers.emplace_back([this] {
                 while (true) {
@@ -42,6 +47,11 @@ public:
         );
         
         std::future<return_type> res = task->get_future();
+        if (thread_count == 1) {
+            // Sequential mode - execute immediately
+            (*task)();
+            return res;
+        }
         {
             std::unique_lock<std::mutex> lock(queue_mutex);
             if(stop) {
