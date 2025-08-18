@@ -38,6 +38,7 @@ class MapReader{
 private:
 size_t rows_=0;
 size_t cols_=0;
+size_t max_steps_=0;
 
   void parseMetadata(ifstream &file, bool &hasErrors, ofstream &errorLog,GameMapInfo&);
   bool tryParseMetadata(const string &line, const string &key, size_t &value, bool &hasErrors, ofstream &errorLog);
@@ -47,6 +48,7 @@ size_t cols_=0;
   void checkExcessRows(ifstream &file, bool &hasErrors, ofstream &errorLog);
   void processRowCells(const string &line, size_t row, vector<vector<char>> &map, bool &hasErrors, ofstream &errorLog);
   public:
+  size_t getMaxSteps() const { return max_steps_; }
   GameMapInfo readBoard(const string &filePath);
   string gameStateToString(const SatelliteView &);
   };

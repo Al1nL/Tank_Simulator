@@ -47,6 +47,7 @@ namespace GameManager_212535058_324022904
         size_t num_shells = 0;
         size_t steps_since_no_shells = 0;
         bool verbose;
+        vector<Tank *> tanks;
         vector<string> logs;
         string output_file;
 
@@ -72,7 +73,7 @@ namespace GameManager_212535058_324022904
         bool isGameOver();
         int countAliveTanks(int player_id);
         TankAlgorithm *findTankAlgorithmById(Tank *tank);
-        void updateTanksInfo(std::vector<Tank *> tanks);
+        void updateTanksInfo();
         GameResult prepareResult();
         // logs
 
