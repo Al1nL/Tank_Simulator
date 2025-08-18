@@ -32,19 +32,24 @@ class AlgorithmRegistrar
             if (!library_handle)
                 library_handle = handle;
         }
+
         const std::string &name() const { return so_name; }
+        
         std::unique_ptr<Player> createPlayer(int player_index, size_t x, size_t y, size_t max_steps, size_t num_shells) const
         {
             return playerFactory(player_index, x, y, max_steps, num_shells);
         }
+
         std::unique_ptr<TankAlgorithm> createTankAlgorithm(int player_index, int tank_index) const
         {
             return tankAlgorithmFactory(player_index, tank_index);
         }
+
         bool hasPlayerFactory() const
         {
             return playerFactory != nullptr;
         }
+        
         bool hasTankAlgorithmFactory() const
         {
             return tankAlgorithmFactory != nullptr;
@@ -116,22 +121,20 @@ public:
     }
     std::size_t count() const { return algorithms.size(); }
 
-    void cleanup()
-    {
-        for (auto &entry : algorithms)
-        {
-            // assign empty std::function
-            entry.setPlayerFactory(PlayerFactory{});
-            entry.setTankAlgorithmFactory(TankAlgorithmFactory{});
+    void cleanup(){
+    // Phase 1: Clear all factories
+        for (auto& entry : algorithms) {
+            entry.setPlayerFactory(nullptr);
+            entry.setTankAlgorithmFactory(nullptr);
+        }
+        algorithms.clear();
 
-            if (entry.getHandle())
-            {
-                dlclose(entry.getHandle());
-                entry.setHandle(nullptr);
-            }
+        for (auto algo : algorithms) {
+            if (algo.getHandle() != nullptr) dlclose(algo.getHandle());
         }
         algorithms.clear();
     }
+
     AlgorithmAndPlayerFactories getAlgorithmAndPlayerFactory(int algo) const
     {
         return algorithms.at(algo);
