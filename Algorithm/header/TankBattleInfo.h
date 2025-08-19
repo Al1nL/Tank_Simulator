@@ -7,8 +7,8 @@
 #include <memory>
 #include <map>
 
-using GameObject = UserCommon__212535058_324022904::GameObject;
-using UserCommon__212535058_324022904::Direction;
+using GameObject = UserCommon_212535058_324022904::GameObject;
+using UserCommon_212535058_324022904::Direction;
 
 using std::map, std::vector, std::pair, std::unique_ptr, std::make_pair;
 namespace Algorithm_212535058_324022904

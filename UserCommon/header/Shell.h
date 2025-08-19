@@ -2,7 +2,7 @@
 #define SHELL_H
 #include "GameObject.h"
 using std::pair;
-namespace UserCommon__212535058_324022904
+namespace UserCommon_212535058_324022904
 {
     class Shell : public GameObject
     {

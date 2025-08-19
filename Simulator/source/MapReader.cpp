@@ -1,6 +1,6 @@
 #include "../header/MapReader.h"
 #include <iostream>
-using namespace UserCommon__212535058_324022904;
+using namespace UserCommon_212535058_324022904;
 /**
  * @brief Reads and parses the game board from the input file.
  * @details Parses metadata, validates input, initializes players and sets up output file.
@@ -21,7 +21,7 @@ GameMapInfo MapReader::readBoard(const string &filePath)
 	string line;
 
 	// Parse metadata
-	parseMetadata(file, hasErrors, errorLog,map_info);
+	parseMetadata(file, hasErrors, errorLog, map_info);
 
 	// Process map rows
 	processMapRows(file, hasErrors, errorLog, map_info);
@@ -32,10 +32,10 @@ GameMapInfo MapReader::readBoard(const string &filePath)
 		errorLog.close();
 		remove("input_errors.txt");
 	}
-	rows_=map_info.height;
-	cols_=map_info.width;
-	max_steps_=map_info.max_steps;
-    return map_info;
+	rows_ = map_info.height;
+	cols_ = map_info.width;
+	max_steps_ = map_info.max_steps;
+	return map_info;
 }
 
 /**
@@ -44,13 +44,13 @@ GameMapInfo MapReader::readBoard(const string &filePath)
  * @param hasErrors Reference to a boolean flag indicating if errors occurred.
  * @param errorLog Reference to the error log output stream.
  */
-void MapReader::parseMetadata(ifstream &file, bool &hasErrors, ofstream &errorLog, GameMapInfo& map_info)
+void MapReader::parseMetadata(ifstream &file, bool &hasErrors, ofstream &errorLog, GameMapInfo &map_info)
 {
 	string line;
 	for (int i = 0; i < 5; i++)
 	{
 		getline(file, line);
-		//size_t temp;
+		// size_t temp;
 		if (line.empty() || line[0] == ';')
 			continue;
 		if (tryParseMetadata(line, "MaxSteps", map_info.max_steps, hasErrors, errorLog))
@@ -61,12 +61,12 @@ void MapReader::parseMetadata(ifstream &file, bool &hasErrors, ofstream &errorLo
 		// For Rows/Cols, parse into temp int first to avoid size_t->int conversion issues
 		if (tryParseMetadata(line, "Rows", map_info.height, hasErrors, errorLog))
 		{
-			//map_info.height = static_cast<size_t>(temp);
+			// map_info.height = static_cast<size_t>(temp);
 			continue;
 		}
 		if (tryParseMetadata(line, "Cols", map_info.width, hasErrors, errorLog))
 		{
-			//map_info.width = static_cast<size_t>(temp);
+			// map_info.width = static_cast<size_t>(temp);
 			continue;
 		}
 
@@ -84,7 +84,7 @@ void MapReader::parseMetadata(ifstream &file, bool &hasErrors, ofstream &errorLo
  * @brief Checks if all required metadata values have been set properly.
  * @return true if max_steps, num_shells, rows, and cols are all greater than zero.
  */
-bool MapReader::hasAllMetadata(GameMapInfo& info) const
+bool MapReader::hasAllMetadata(GameMapInfo &info) const
 {
 	return info.max_steps > 0 && info.num_shells > 0 && info.width > 0 && info.height > 0;
 }
@@ -128,7 +128,7 @@ bool MapReader::tryParseMetadata(const string &line, const string &key, size_t &
  * @param hasErrors Reference flag for error detection.
  * @param errorLog Stream to log any parsing errors.
  */
-void MapReader::processMapRows(ifstream &file, bool &hasErrors, ofstream &errorLog, GameMapInfo& map_info)
+void MapReader::processMapRows(ifstream &file, bool &hasErrors, ofstream &errorLog, GameMapInfo &map_info)
 {
 	string line;
 	vector<vector<char>> map(map_info.height);
@@ -166,7 +166,7 @@ void MapReader::processMapRows(ifstream &file, bool &hasErrors, ofstream &errorL
 	}
 
 	checkExcessRows(file, hasErrors, errorLog);
-    map_info.map = std::make_unique<BoardSatelliteView>(map_info.height, map_info.width, map);
+	map_info.map = std::make_unique<BoardSatelliteView>(map_info.height, map_info.width, map);
 }
 
 /**
@@ -189,7 +189,8 @@ void MapReader::checkExcessRows(ifstream &file, bool &hasErrors, ofstream &error
 		errorLog << extraRows << " excess rows found. Ignoring them.\n";
 	}
 }
-  string MapReader::gameStateToString(const SatelliteView &view){
+string MapReader::gameStateToString(const SatelliteView &view)
+{
 	string result;
 	for (size_t i = 0; i < rows_; ++i)
 	{
@@ -200,4 +201,4 @@ void MapReader::checkExcessRows(ifstream &file, bool &hasErrors, ofstream &error
 		result += '\n';
 	}
 	return result;
-  }
+}

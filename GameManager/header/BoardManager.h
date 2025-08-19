@@ -18,7 +18,7 @@ namespace fs = std::filesystem;
 #include <algorithm>
 
 using std::vector, std::unique_ptr, std::string, std::stringstream, std::map, std::cerr, std::endl, std::ofstream;
-using namespace UserCommon__212535058_324022904;
+using namespace UserCommon_212535058_324022904;
 namespace GameManager_212535058_324022904
 {
 

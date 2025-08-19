@@ -5,7 +5,7 @@
 #include <memory>  // For std::unique_ptr
 
 
-namespace UserCommon__212535058_324022904
+namespace UserCommon_212535058_324022904
 {
     using std::vector, std::pair;
     enum Direction

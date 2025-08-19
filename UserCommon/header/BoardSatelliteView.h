@@ -7,7 +7,7 @@
 #include "../../common/SatelliteView.h"
 
 using std::pair, std::vector, std::move;
-namespace UserCommon__212535058_324022904
+namespace UserCommon_212535058_324022904
 {
     class BoardSatelliteView : public SatelliteView
     {

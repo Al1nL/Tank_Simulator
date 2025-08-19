@@ -1,6 +1,6 @@
 #ifndef GAMEMANAGER
 #define GAMEMANAGER
-    #include <filesystem>
+#include <filesystem>
 namespace fs = std::filesystem;
 
 #include "../../common/AbstractGameManager.h"
@@ -12,9 +12,9 @@ namespace fs = std::filesystem;
 #include <map>
 #include <vector>
 #include <string>
-#include <iostream>
 #include "./BoardManager.h"
-using namespace UserCommon__212535058_324022904;
+
+using namespace UserCommon_212535058_324022904;
 
 #include "../../UserCommon/header/BoardSatelliteView.h"
 #include "../../UserCommon/header/Tank.h"
@@ -27,15 +27,17 @@ namespace GameManager_212535058_324022904
     {
     public:
         explicit GameManager(bool verbose);
-        ~GameManager() {
+        ~GameManager()
+        {
             tanks.clear();
-    
+
             // Clear player algorithms
-            for (auto& player : player_tanks_algo) {
+            for (auto &player : player_tanks_algo)
+            {
                 player.second.clear();
             }
             player_tanks_algo.clear();
-            
+
             // Clear other containers
             logs.clear();
             players.clear();
@@ -75,7 +77,6 @@ namespace GameManager_212535058_324022904
         std::vector<Player *> players;
 
         // Private methods
-
 
         void initializeBoard(const SatelliteView &map);
         void initializeTanks(

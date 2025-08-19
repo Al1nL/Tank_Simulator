@@ -1,5 +1,5 @@
 #include "../header/Shell.h"
-namespace UserCommon__212535058_324022904 {
+namespace UserCommon_212535058_324022904 {
     /**
      * @brief Constructs a Shell object.
      *

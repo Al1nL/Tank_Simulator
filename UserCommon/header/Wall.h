@@ -2,7 +2,7 @@
 #define WALL_H
 #include "GameObject.h"
 using std::pair;
-namespace UserCommon__212535058_324022904 {
+namespace UserCommon_212535058_324022904 {
     class Wall : public GameObject
     {
         int hitCount = 0;

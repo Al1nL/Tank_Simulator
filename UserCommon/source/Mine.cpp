@@ -1,5 +1,5 @@
 #include "../header/Mine.h"
-namespace UserCommon__212535058_324022904 {
+namespace UserCommon_212535058_324022904 {
     /**
      * @brief Constructs a Mine object at the given position.
      * @param pos Position coordinates of the mine.

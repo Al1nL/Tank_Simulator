@@ -2,7 +2,7 @@
 #include "../header/TankBattleInfo.h"
 #include "../../UserCommon/header/Shell.h"
 
-using namespace UserCommon__212535058_324022904;
+using namespace UserCommon_212535058_324022904;
 using namespace Algorithm_212535058_324022904;
 
 /**
@@ -10,7 +10,8 @@ using namespace Algorithm_212535058_324022904;
  * @param player_index Index of the player that the tank will belong to.
  * @param tank_index Index of this tank.
  */
-MyTankAlgorithm::MyTankAlgorithm(int player_index, int tank_index) : player_index(player_index), tank_index(tank_index), battle_info(make_unique<TankBattleInfo>(tank_index, player_index)) {
+MyTankAlgorithm::MyTankAlgorithm(int player_index, int tank_index) : player_index(player_index), tank_index(tank_index), battle_info(make_unique<TankBattleInfo>(tank_index, player_index))
+{
 }
 
 /**
@@ -22,13 +23,13 @@ MyTankAlgorithm::MyTankAlgorithm(int player_index, int tank_index) : player_inde
  */
 void MyTankAlgorithm::updateBattleInfo(BattleInfo &info)
 {
-	auto& tank_info = dynamic_cast<TankBattleInfo &>(info);
+	auto &tank_info = dynamic_cast<TankBattleInfo &>(info);
 	battle_info->setOpponents(tank_info.getOpponents());
 	battle_info->setPosition(tank_info.getPosition().first, tank_info.getPosition().second);
 	battle_info->setDirection(tank_info.getDirection());
 	battle_info->setFrameObjects(
-		tank_info.getKnownObjects(),          // raw pointer map
-		tank_info.takeObjectStorage()         // unique_ptr storage (moved)
+		tank_info.getKnownObjects(),  // raw pointer map
+		tank_info.takeObjectStorage() // unique_ptr storage (moved)
 	);
 	battle_info->setRemainingShells(tank_info.getRemainingShells());
 	battle_info->setMapSize(tank_info.getMapSize().first, tank_info.getMapSize().second);
@@ -242,24 +243,25 @@ ActionRequest MyTankAlgorithm::checkForEscape()
  */
 bool MyTankAlgorithm::willBeHitIn(int row, int col, int t)
 {
-	
-	const auto& knownObjects = battle_info->getKnownObjectsView();
-	
+
+	const auto &knownObjects = battle_info->getKnownObjectsView();
+
 	for (const auto &[pos, objects] : knownObjects)
 	{
 		if (objects.empty())
 			continue;
 
 		auto object = (objects.size() > 1 ? objects[1] : objects[0]);
-		if (object == nullptr) {
-            continue;
-        }
+		if (object == nullptr)
+		{
+			continue;
+		}
 		char symbol = object->getSymbol();
 		if (symbol != '*')
 			continue;
 
 		auto [sr, sc] = pos;
-		Direction dir = dynamic_cast<Shell*>(object)->getDirection();
+		Direction dir = dynamic_cast<Shell *>(object)->getDirection();
 
 		for (int i = 0; i <= 2 && dir != None; i++)
 		{
@@ -295,7 +297,6 @@ bool MyTankAlgorithm::isAlignedWithOpponent(pair<int, int> opponentPos)
 {
 	auto [r, c] = battle_info->getPosition();
 	return r == opponentPos.first || c == opponentPos.second;
-	
 }
 
 /**
@@ -439,10 +440,11 @@ void MyTankAlgorithm::updateInnerInfoAfterAction(ActionRequest action)
 	pair<int, int> newPos = {-1, -1};
 	if (battle_info->isWaitingToReverse() && battle_info->getWaitingForBackward() == 0)
 		action = ActionRequest::MoveBackward; // back after 3 rounds, no matter what the other action now is, it is ignored?
-	if(action!=ActionRequest::Shoot){
+	if (action != ActionRequest::Shoot)
+	{
 		battle_info->decreaseShootCooldown();
-		}
-		switch (action)
+	}
+	switch (action)
 	{
 	case ActionRequest::MoveForward:
 		if (battle_info->isWaitingToReverse())

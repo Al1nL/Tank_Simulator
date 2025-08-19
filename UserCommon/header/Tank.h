@@ -5,7 +5,7 @@
 #include <string> // for to_string()
 #include "../../common/ActionRequest.h"
 using std::pair;
-namespace UserCommon__212535058_324022904 {
+namespace UserCommon_212535058_324022904 {
     class Tank : public GameObject
     {
         int tank_index;

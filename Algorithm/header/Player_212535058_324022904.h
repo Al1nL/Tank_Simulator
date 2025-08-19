@@ -6,11 +6,11 @@
 #include <memory>
 
 class BattleInfo;
-namespace UserCommon__212535058_324022904 {
+namespace UserCommon_212535058_324022904 {
     class Shell;  // Forward declaration
 }
 
-using Shell = UserCommon__212535058_324022904::Shell;
+using Shell = UserCommon_212535058_324022904::Shell;
 using std::unique_ptr, std::vector,std::make_unique;
 
 namespace Algorithm_212535058_324022904 {

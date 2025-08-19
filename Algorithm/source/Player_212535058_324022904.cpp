@@ -7,21 +7,18 @@
 #include "../../UserCommon/header/Mine.h"
 #include "../../UserCommon/header/Wall.h"
 #include "../header/TankBattleInfo.h"
-#include <iostream>
 
-using namespace UserCommon__212535058_324022904;
+using namespace UserCommon_212535058_324022904;
 using namespace Algorithm_212535058_324022904;
 REGISTER_PLAYER(Player_212535058_324022904);
-
-
 
 /**
  * Constructor for AdvancedPlayer.
  * Initializes the player with map size, max steps, and number of shells.
  */
 Player_212535058_324022904::Player_212535058_324022904(int player_index, size_t map_height, size_t map_width, size_t max_steps, size_t num_shells)
-: player_index(player_index), map_width(map_width), map_height(map_height), steps_left(static_cast<int>(max_steps)),
-    shells_per_tank(num_shells), battle_info(make_unique<TankBattleInfo>(-1, player_index)) {}
+    : player_index(player_index), map_width(map_width), map_height(map_height), steps_left(static_cast<int>(max_steps)),
+      shells_per_tank(num_shells), battle_info(make_unique<TankBattleInfo>(-1, player_index)) {}
 
 /**
  * @brief Returns the player index.
@@ -113,7 +110,7 @@ void Player_212535058_324022904::calcShellsDirection(vector<Shell *> knownShells
  */
 vector<Shell *> Player_212535058_324022904::getShellsFromKnownObjects()
 {
-    const auto& knownObj = dynamic_cast<TankBattleInfo *>(battle_info.get())->getKnownObjectsView();
+    const auto &knownObj = dynamic_cast<TankBattleInfo *>(battle_info.get())->getKnownObjectsView();
     vector<Shell *> shells;
 
     for (auto &[pos, objs] : knownObj)
@@ -146,7 +143,7 @@ void Player_212535058_324022904::getBattleInfoFromSatelliteView(SatelliteView &v
     auto *tank_info = dynamic_cast<TankBattleInfo *>(battle_info.get());
 
     vector<OppData> opponents;
-    auto& knownObjects = tank_info->getKnownObjectsForUpdate();
+    auto &knownObjects = tank_info->getKnownObjectsForUpdate();
     // This will own all the game objects
     vector<unique_ptr<GameObject>> objectStorage;
 

@@ -1,6 +1,6 @@
 #include "../header/TankBattleInfo.h"
 #include "../../UserCommon/header/Shell.h"
-using namespace UserCommon__212535058_324022904;
+using namespace UserCommon_212535058_324022904;
 using namespace Algorithm_212535058_324022904;
 
 /**
@@ -9,25 +9,28 @@ using namespace Algorithm_212535058_324022904;
  * Also sets the initial facing direction: L for player 1, R otherwise.
  */
 
- TankBattleInfo::TankBattleInfo(int tank_index, int player_index) : id(tank_index), player_id(player_index)
+TankBattleInfo::TankBattleInfo(int tank_index, int player_index) : id(tank_index), player_id(player_index)
 {
     direction = player_id == 1 ? L : R;
 }
 
-vector<std::unique_ptr<GameObject>> TankBattleInfo::takeObjectStorage() {
+vector<std::unique_ptr<GameObject>> TankBattleInfo::takeObjectStorage()
+{
     vector<std::unique_ptr<GameObject>> newStorage;
-    for (auto& obj : objectStorage) {
-        if (obj) {
-            newStorage.push_back(obj->clone());  // Safe: deep copy
+    for (auto &obj : objectStorage)
+    {
+        if (obj)
+        {
+            newStorage.push_back(obj->clone()); // Safe: deep copy
         }
     }
     return newStorage;
 }
 void TankBattleInfo::setFrameObjects(
-    std::map<std::pair<int,int>, std::vector<GameObject*>>&& newKnownObjects,
-    std::vector<std::unique_ptr<GameObject>>&& newStorage
-) {
-    knownObjects.clear(); // Clear existing known objects
+    std::map<std::pair<int, int>, std::vector<GameObject *>> &&newKnownObjects,
+    std::vector<std::unique_ptr<GameObject>> &&newStorage)
+{
+    knownObjects.clear();  // Clear existing known objects
     objectStorage.clear(); // Clear existing storage
     objectStorage = std::move(newStorage);
     knownObjects = std::move(newKnownObjects);
@@ -157,13 +160,16 @@ GameObject *TankBattleInfo::getObjectByPosition(pair<int, int> pos) const
  */
 map<pair<int, int>, vector<GameObject *>> TankBattleInfo::getKnownObjects() const
 {
-     std::map<std::pair<int,int>, std::vector<GameObject*>> copy;
-    for (const auto& [pos, objects] : knownObjects) {
-        for (auto* obj : objects) {
-            if (obj) {
+    std::map<std::pair<int, int>, std::vector<GameObject *>> copy;
+    for (const auto &[pos, objects] : knownObjects)
+    {
+        for (auto *obj : objects)
+        {
+            if (obj)
+            {
                 auto clone = obj->clone();
                 copy[pos].push_back(clone.get());
-            }   // Requires GameObject::clone()
+            } // Requires GameObject::clone()
         }
     }
     return copy;
