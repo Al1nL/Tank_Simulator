@@ -10,8 +10,6 @@ USER_COMMON_DIR := ../UserCommon/source
 PLAYER_SRC := $(SRC_DIR)/Player_212535058_324022904.cpp
 TANK_SRC := $(SRC_DIR)/TankAlgorithm_212535058_324022904.cpp $(SRC_DIR)/MyTankAlgorithm.cpp $(SRC_DIR)/TankBattleInfo.cpp
 USER_COMMON_SRC := $(USER_COMMON_DIR)/Shell.cpp $(USER_COMMON_DIR)/Wall.cpp $(USER_COMMON_DIR)/Mine.cpp $(USER_COMMON_DIR)/Tank.cpp
-# COMMON_DIR := common
-# COMMON_SRC := $(COMMON_DIR)/PlayerRegistration.cpp $(COMMON_DIR)/TankAlgorithmRegistration.cpp $(COMMON_SRC)
 
 # Target
 TARGET := $(BUILD_DIR)/Algorithm_212535058_324022904.so
