@@ -1,0 +1,14 @@
+Test Map 3 - Clustered Start with Multiple Tanks
+MaxSteps = 1000
+NumShells = 50
+Rows = 12
+Cols = 12
+############
+#1  1   @ 2#
+#  #  #    #
+# @  #  2  #
+#    1   @ #
+# 2  @  #  #
+# #     1  #
+#@   2   #@#
+############

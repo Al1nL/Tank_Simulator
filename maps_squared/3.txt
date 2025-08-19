@@ -1,0 +1,18 @@
+Test Map 2 - Asymmetric Maze  
+MaxSteps=300  
+NumShells=20  (Increased for 4-tank chaos)  
+Rows=12  
+Cols=12  
+############  
+#1  #     @ #  
+# ### # # ###  
+#1 @ 2      #  
+## # ###   @#  
+#      @  2 #  
+# ## # # ###  
+# @         #  
+### # ### # #  
+#     1 @  #  
+# ###   # ##  
+#2     @   #  
+############  
