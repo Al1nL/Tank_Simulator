@@ -16,7 +16,7 @@ namespace GameManager_212535058_324022904
     {
         if (x >= height || y >= width)
             return nullptr;
-        return !game_map[x][y].empty() ? game_map[x][y].size() > 1 ? game_map[x][y][1].get() : game_map[x][y][0].get() : nullptr; // if more than one then shell is last and more important
+        return !game_map[x][y].empty() ? game_map[x][y].size() > 1 ? game_map[x][y].back().get() : game_map[x][y][0].get() : nullptr; // if more than one then shell is last and more important
     }
 
     /**
@@ -103,43 +103,34 @@ namespace GameManager_212535058_324022904
     void BoardManager::moveFiredShells()
     {
 
-        vector<int> index_of_delete;
-        for (size_t i = 0; i < fired_shells.size(); i++)
+        for (int step = 0; step < 2; step++)
         {
-            auto &shell = fired_shells[i];
-            bool shellDestroyed = false;
-
-            for (int step = 0; step < 2 && !shellDestroyed; step++)
+            for (size_t i = 0; i < fired_shells.size(); i++)
             {
+                auto &shell = fired_shells[i];
+                if (shell == nullptr || shell->isDestroyed())
+                {
+                    continue;
+                }
                 pair<int, int> oldPos = shell->getPos();
+                shell->setLastPos(oldPos);
                 pair<int, int> newPos = calculateNewPosition(oldPos, shell->getDirection());
 
                 // Find the shell's unique_ptr in game_map
-                unique_ptr<GameObject> shellPtr;
-                if (game_map[oldPos.first][oldPos.second].size() > 1)
-                {
-                    shellPtr = std::move(game_map[oldPos.first][oldPos.second][1]);
-                    game_map[oldPos.first][oldPos.second].erase(game_map[oldPos.first][oldPos.second].begin() + 1);
-                }
-                else
-                {
-                    shellPtr = std::move(game_map[oldPos.first][oldPos.second][0]);
-                }
+                unique_ptr<GameObject> shellPtr = extractObjectFromMap(shell); // restd::move shell from map
 
                 // std::move to new position using updateMap
+                shellPtr->setPos(newPos);
                 updateMap(std::move(shellPtr), newPos);
-                shell->setPos(newPos);
                 handleAllCollisions();
-                shellDestroyed = getObjectAt(newPos.first, newPos.second)->isDestroyed();
-                if (shellDestroyed)
-                    index_of_delete.push_back(i);
             }
         }
-
-        for (int i : index_of_delete)
-        {
-            fired_shells.erase(fired_shells.begin() + i);
-        }
+        auto new_end = std::remove_if(fired_shells.begin(), fired_shells.end(),
+                                      [](Shell *shell)
+                                      {
+                                          return shell == nullptr || shell->isDestroyed();
+                                      });
+        fired_shells.erase(new_end, fired_shells.end());
     }
 
     /**
@@ -185,38 +176,15 @@ namespace GameManager_212535058_324022904
             for (int y = 0; y < width; y++)
             {
                 auto &cell = game_map[x][y];
-                if (cell.size() > 1)
+                if (count_if(cell.begin(), cell.end(),
+                             [](const auto &obj)
+                             { return obj && !obj->isDestroyed(); }) > 1)
                 {
-                    // Check for special case: exactly 2 objects where one is shell and other is wall/mine
-                    if (cell.size() == 2)
-                    {
-                        bool hasShell = false;
-                        bool hasWallOrMine = false;
-
-                        for (auto &obj : cell)
-                        {
-                            if (obj && dynamic_cast<Shell *>(obj.get()))
-                            {
-                                hasShell = true;
-                            }
-                            else if (obj && (dynamic_cast<Wall *>(obj.get()) || dynamic_cast<Mine *>(obj.get())))
-                            {
-                                hasWallOrMine = true;
-                            }
-                        }
-
-                        // Skip collision processing for this case
-                        if (hasShell && hasWallOrMine)
-                        {
-                            continue;
-                        }
-                    }
-
-                    // Normal collision processing for other cases
                     vector<GameObject *> objects;
                     for (auto &obj : cell)
                     {
-                        objects.push_back(obj.get());
+                        if (obj && !obj->isDestroyed()) // only consider non-destroyed objects
+                            objects.push_back(obj.get());
                     }
 
                     processCollision(objects);
@@ -247,21 +215,20 @@ namespace GameManager_212535058_324022904
         bool containsTank = false;
         bool containsShell = false;
         bool containsWall = false;
-
+        bool contains2Shells = count_if(objects.begin(), objects.end(),
+                                        [](GameObject *obj)
+                                        { return dynamic_cast<Shell *>(obj); }) > 1;
         // Analyze collision group
         for (auto obj : objects)
         {
-            if (!obj->isDestroyed())
-            {
-                if (dynamic_cast<Mine *>(obj))
-                    containsMine = true;
-                else if (dynamic_cast<Tank *>(obj))
-                    containsTank = true;
-                else if (dynamic_cast<Shell *>(obj))
-                    containsShell = true;
-                else if (dynamic_cast<Wall *>(obj))
-                    containsWall = true;
-            }
+            if (dynamic_cast<Mine *>(obj))
+                containsMine = true;
+            else if (dynamic_cast<Tank *>(obj))
+                containsTank = true;
+            else if (dynamic_cast<Shell *>(obj))
+                containsShell = true;
+            else if (dynamic_cast<Wall *>(obj))
+                containsWall = true;
         }
 
         // Handle special cases
@@ -297,42 +264,53 @@ namespace GameManager_212535058_324022904
         {
             if (auto shell = dynamic_cast<Shell *>(obj))
             {
+                if (shell->isDestroyed())
+                    continue; // ignore destroyed shells
                 bool destroyShell = false;
-                // Shell-Wall collision
-                if (containsWall)
-                {
-                    for (auto other : objects)
-                    {
-                        if (auto wall = dynamic_cast<Wall *>(other))
-                        {
-                            wall->damage();
-                        }
-                    }
-                }
-                // Shell-Tank collision
-                if (containsTank)
-                {
-                    for (auto other : objects)
-                    {
-                        if (auto tank = dynamic_cast<Tank *>(other))
-                        {
-                            if (!tank->isDestroyed()) // ignore destroyed tanks
-                                tank->destroy();
-                            destroyShell = true;
-                        }
-                    }
-                }
+
                 // Shell-Shell collision
-                if (containsShell)
+                if (contains2Shells)
                 {
                     for (auto other : objects)
                     {
-                        if (dynamic_cast<Shell *>(other))
+                        if (!dynamic_cast<Mine *>(other))
                         {
-                            other->destroy(); // Destroy all shells
+                            other->destroy(); // Destroy all object but mine
                             destroyShell = true;
                         }
                     }
+                    // continue;
+                }
+                else if (containsShell)
+                {
+                    // Shell-Wall collision
+                    if (containsWall && shell->getLastPos() != shell->getPos())
+                    {
+                        for (auto other : objects)
+                        {
+                            if (auto wall = dynamic_cast<Wall *>(other))
+                            {
+                                if (wall->isDestroyed())
+                                    continue; // ignore destroyed walls
+                                wall->damage();
+                            }
+                        }
+                    }
+                    // Shell-Tank collision
+                    if (containsTank)
+                    {
+                        for (auto other : objects)
+                        {
+                            if (auto tank = dynamic_cast<Tank *>(other))
+                            {
+                                if (tank->isDestroyed())
+                                    continue;
+                                tank->destroy();
+                                destroyShell = true;
+                            }
+                        }
+                    }
+                    shell->setLastPos(shell->getPos()); // reset last position to current position
                 }
                 if (destroyShell)
                 {
@@ -469,8 +447,8 @@ namespace GameManager_212535058_324022904
                 {
                     newPos = calculateNewPosition(tank->getPos(), tank->getDirection());
                     unique_ptr<GameObject> tankPtr = extractObjectFromMap(tank);
-                    tank->setPos(newPos);
 
+                    tank->setPos(newPos);
                     updateMap(std::move(tankPtr), newPos);
                 }
                 break;
@@ -499,8 +477,23 @@ namespace GameManager_212535058_324022904
                     tank->setNumOfShells(tank->getNumOfRemainingShells() - 1);
                     tank->setShootCooldown(4);
                     pair shell_pos = calculateNewPosition(tank->getPos(), tank->getDirection());
-                    fired_shells.push_back(std::make_unique<Shell>(shell_pos, tank->getDirection(), tank->getOwnerId()));
-                    updateMap(std::make_unique<Shell>(shell_pos, tank->getDirection(), tank->getOwnerId()), shell_pos);
+                    auto shellPtr = std::make_unique<Shell>(shell_pos, tank->getDirection(), tank->getOwnerId());
+                    Shell *rawShellPtr = shellPtr.get();       // keep non-owning pointer
+
+                    fired_shells.push_back(rawShellPtr);       // track shell
+                    updateMap(std::move(shellPtr), shell_pos); // transfer ownership into map
+                    if (game_map[shell_pos.first][shell_pos.second].size() > 1)
+                    {
+                        if (auto wall = dynamic_cast<Wall *>(game_map[shell_pos.first][shell_pos.second][0].get()))
+                        {
+                            if (!wall->isDestroyed()) // ignore destroyed walls
+                                wall->damage();
+                        }
+                    }
+                }
+                else if (tank->isWaitingToShoot())
+                {
+                    tank->setShootCooldown(tank->getShootCooldown() - 1);
                 }
                 break;
 

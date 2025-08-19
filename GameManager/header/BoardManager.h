@@ -27,7 +27,7 @@ namespace GameManager_212535058_324022904
         int height;
         int width;
         vector<vector<vector<unique_ptr<GameObject>>>> game_map;
-        vector<unique_ptr<Shell>> fired_shells;
+        vector <Shell*> fired_shells; // changed to vector of raw pointers for easier access
         vector<string> boardStates;
 
     public:

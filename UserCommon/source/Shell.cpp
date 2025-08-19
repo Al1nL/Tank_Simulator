@@ -8,7 +8,7 @@ namespace UserCommon__212535058_324022904 {
      * @param owner The ID of the tank/player who fired the shell.
      */
     Shell::Shell(pair<int, int> pos, Direction dir, int owner)
-        : GameObject(pos), direction(dir), ownerId(owner), destroyed(false) {}
+        : GameObject(pos), direction(dir), ownerId(owner), destroyed(false), lastpos(pos) {}
 
     /**
      * @brief Gets the current direction of the shell.

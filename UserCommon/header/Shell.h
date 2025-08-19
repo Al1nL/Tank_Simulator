@@ -10,12 +10,14 @@ namespace UserCommon__212535058_324022904
         int ownerId;
         bool destroyed;
         static const char SHELL_SYMBOL = '*';
+        pair<int, int> lastpos;
 
     public:
         // Constructor
         Shell(pair<int, int> pos, Direction dir, int owner);
         ~Shell() override = default;
-
+        pair<int, int> getLastPos() const { return lastpos; }
+        void setLastPos(pair<int, int> pos) { lastpos = pos; }
         Shell(Shell const &) = delete;
         Shell &operator=(const Shell &) = delete;
         std::unique_ptr<GameObject> clone() const override {
