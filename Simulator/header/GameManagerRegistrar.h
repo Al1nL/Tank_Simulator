@@ -7,7 +7,6 @@
 #include <cassert>
 #include <functional>
 #include <dlfcn.h>
-#include <mutex>
 #include "../../common/GameManagerRegistration.h"
 #include "../../common/AbstractGameManager.h"
 
@@ -55,21 +54,17 @@ class GameManagerRegistrar {
 
     std::vector<GameManagerEntry> game_managers;
     static GameManagerRegistrar registrar;
-    mutable std::mutex mutex;
 
 public:
     static GameManagerRegistrar& getGameManagerRegistrar();
 
     void createGameManagerEntry(const std::string& name, void* handle = nullptr) {
-        std::lock_guard<std::mutex> lock(mutex);
         game_managers.emplace_back(name, handle);
     }
     void setHandleToLastEntry(void* handle) {
-        std::lock_guard<std::mutex> lock(mutex);
         game_managers.back().setHandle(handle);
     }
     void addFactoryToLastEntry(GameManagerFactory&& factory) {
-        std::lock_guard<std::mutex> lock(mutex);
         game_managers.back().setFactory(std::move(factory));
     }
 
@@ -79,7 +74,6 @@ public:
     };
 
     void validateLastRegistration() {
-        std::lock_guard<std::mutex> lock(mutex);
         const auto& last = game_managers.back();
         bool hasName = (last.name() != "");
         if (!hasName || !last.hasFactory()) {
@@ -92,39 +86,32 @@ public:
     }
 
     void removeLast() {
-        std::lock_guard<std::mutex> lock(mutex);
         game_managers.pop_back();
     }
 
     auto begin() const {
-        std::lock_guard<std::mutex> lock(mutex);
         return game_managers.begin();
     }
 
     auto end() const {
-        std::lock_guard<std::mutex> lock(mutex);
         return game_managers.end();
     }
 
     std::size_t count() const {
-        std::lock_guard<std::mutex> lock(mutex);
         return game_managers.size();
     }
 
-    void clear() {
-        std::lock_guard<std::mutex> lock(mutex);
-        game_managers.clear();
-    }
+    // void clear() {
+    //     game_managers.clear();
+    // }
 
     void cleanup() {
-        std::lock_guard<std::mutex> lock(mutex);
         for (auto& entry : game_managers) {
             entry.setFactory(GameManagerFactory{}); // assign empty std::function
 
             if (entry.getHandle()) {
                 dlclose(entry.getHandle());
                 entry.setHandle(nullptr);
-                
             }
         }
         game_managers.clear();
@@ -132,7 +119,6 @@ public:
 
     GameManagerEntry getGameManager(int i) const
     {
-        std::lock_guard<std::mutex> lock(mutex);
         return game_managers.at(i);
     }
 };

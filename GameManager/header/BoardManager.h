@@ -42,9 +42,6 @@ namespace GameManager_212535058_324022904
         void writeBoardStates(string);
 
         void updateMap(unique_ptr<GameObject> obj, pair<int, int> new_pos);
-
-        vector<Tank *> getSortedTanks();
-
         void moveFiredShells();
         bool isValidMove(Tank *, ActionRequest);
         void applyMoves(map<Tank *, ActionRequest>);

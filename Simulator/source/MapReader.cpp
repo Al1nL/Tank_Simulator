@@ -34,6 +34,7 @@ GameMapInfo MapReader::readBoard(const string &filePath)
 	}
 	rows_=map_info.height;
 	cols_=map_info.width;
+	max_steps_=map_info.max_steps;
     return map_info;
 }
 

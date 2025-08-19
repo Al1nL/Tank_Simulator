@@ -78,7 +78,7 @@ private:
   std::string generateOutputFilename(const std::string &folder, const std::string &prefix);
   std::string getBaseName(const std::string& filename);
   void logResults(std::unordered_map<std::string, std::vector<std::string>>, std::ofstream&);
-
+  std::string getGameResultMsg(const GameResult& result, size_t max_steps);
   //mode helper functions
   GameResult runSingleComparativeGame(int manager_num);
   GameResult runSingleCompetitionGame(size_t map_idx, size_t algo1_idx, size_t algo2_idx);

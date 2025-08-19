@@ -48,8 +48,6 @@ namespace GameManager_212535058_324022904
         // Get directory from GameManager output_file (assuming you have access to it)
         std::string dir = fs::path(fileName).parent_path().string();
         fileName = fs::path(fileName).filename().string();
-        // Make sure directory exists
-        //fs::create_directories(dir);
 
         // Build full path
         std::string fullPath = dir + "/gameSteps_" + fileName;
@@ -100,30 +98,6 @@ namespace GameManager_212535058_324022904
     }
 
     /**
-     * @brief Retrieves all tanks currently on the board, sorted by appearance.
-     *
-     * @return A vector of pointers to Tank objects.
-     */
-    vector<Tank *> BoardManager::getSortedTanks()
-    {
-        vector<Tank *> tanks;
-        for (auto &rowVec : game_map)
-        {
-            for (auto &cellVec : rowVec)
-            {
-                for (auto &obj : cellVec)
-                {
-                    if (obj && (obj->getSymbol() == '1' || obj->getSymbol() == '2'))
-                    {
-                        tanks.push_back(dynamic_cast<Tank *>(obj.get()));
-                    }
-                }
-            }
-        }
-        return tanks;
-    }
-
-    /**
      * @brief std::moves all shells that have been fired up to 2 steps and handles collisions.
      */
     void BoardManager::moveFiredShells()
@@ -147,7 +121,8 @@ namespace GameManager_212535058_324022904
                     shellPtr = std::move(game_map[oldPos.first][oldPos.second][1]);
                     game_map[oldPos.first][oldPos.second].erase(game_map[oldPos.first][oldPos.second].begin() + 1);
                 }
-                else{
+                else
+                {
                     shellPtr = std::move(game_map[oldPos.first][oldPos.second][0]);
                 }
 

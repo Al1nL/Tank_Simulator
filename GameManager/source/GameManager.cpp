@@ -24,7 +24,6 @@ namespace GameManager_212535058_324022904
         current_step = 0;
         num_shells = numShells;
         steps_since_no_shells = 0;
-        std::cerr << map_name << " - " << name1 << " vs " << name2 << std::endl;
         // Initialize board and tanks
         players.push_back(&player1);
         players.push_back(&player2);
@@ -35,6 +34,7 @@ namespace GameManager_212535058_324022904
             return res;
         }
         initializeTanks(player1_tank_algo_factory, player2_tank_algo_factory);
+
         // Main game loop
         while (!isGameOver())
         {
@@ -90,6 +90,7 @@ namespace GameManager_212535058_324022904
                         player_id,
                         num_shells);
                     game_map[i][j].push_back(std::move(tank));
+                    tanks.push_back(dynamic_cast<Tank *>(game_map[i][j].back().get()));
                     player_shell_count[player_id] += num_shells;
                     break;
                 }
@@ -132,24 +133,21 @@ namespace GameManager_212535058_324022904
         {
             return;
         }
-
-        vector<Tank *> tanks = board->getSortedTanks();
         map<Tank *, ActionRequest> actionRequests;
 
         // Collect actions from all tanks
         for (auto tank : tanks)
         {
-            // Get action from algorithm
-            if(tank->isDestroyed()) {
-                actionRequests[tank] = ActionRequest::DoNothing;
-                continue;
+            if (!tank->isDestroyed())
+            {
+                TankAlgorithm *tankPtr = findTankAlgorithmById(tank);
+                ActionRequest action = tankPtr->getAction();
+                actionRequests[tank] = action;
             }
-            TankAlgorithm *tankPtr = findTankAlgorithmById(tank);
-            ActionRequest action = tankPtr->getAction();
-            actionRequests[tank] = action;
         }
+
         board->applyMoves(actionRequests);
-        updateTanksInfo(tanks);
+        updateTanksInfo();
         if (verbose)
             logs.push_back(generateRoundOutput(actionRequests));
 
@@ -232,7 +230,7 @@ namespace GameManager_212535058_324022904
         return nullptr;
     }
 
-    void GameManager::updateTanksInfo(vector<Tank *> tanks)
+    void GameManager::updateTanksInfo()
     {
         for (Tank *tank : tanks)
         {
@@ -270,16 +268,16 @@ namespace GameManager_212535058_324022904
     // Logging funcs
 
     /**
-     * @brief Converts the actions of tanks for a round into a formatted string output.
+     * @brief Converts the actions of tanks(in order as "born" on the map) for a round into a formatted string output.
      * @param tankActions Map of Tank pointers to their respective ActionRequests.
      * @return String summarizing the actions performed by each tank.
      */
     string GameManager::generateRoundOutput(map<Tank *, ActionRequest> tankActions)
     {
         vector<string> actions;
-        for (const auto &[tank, acts] : tankActions)
+        for (auto tank : tanks)
         {
-            string move = actionToString(acts);
+            string move = actionToString(tankActions[tank]);
             if (tank->isDestroyed())
             {
                 if (tank->isKilledThisRound())
@@ -342,8 +340,6 @@ namespace GameManager_212535058_324022904
         {
             logs.push_back("Tie, both players have zero tanks");
         }
-
-        cerr << logs[logs.size() - 1] << endl;
     }
 
     /**
@@ -400,8 +396,7 @@ namespace GameManager_212535058_324022904
         // Create directory if it doesn't exist
         fs::create_directories(dir);
 
-        size_t last_slash = filePath.find_last_of("/\\");
-        output_file = dir + "/output_P1_" +
-                      name1 + "_P2_" + name2 + "_" + (last_slash == std::string::npos ? filePath : filePath.substr(last_slash + 1));
+        string map_name = fs::path(filePath).stem().string();
+        output_file = dir + "/output_P1_" + name1 + "_P2_" + name2 + "_" + map_name + ".txt";
     }
 }
