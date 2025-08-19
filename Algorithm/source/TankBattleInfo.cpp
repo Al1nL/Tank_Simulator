@@ -160,7 +160,10 @@ map<pair<int, int>, vector<GameObject *>> TankBattleInfo::getKnownObjects() cons
      std::map<std::pair<int,int>, std::vector<GameObject*>> copy;
     for (const auto& [pos, objects] : knownObjects) {
         for (auto* obj : objects) {
-            if (obj) copy[pos].push_back(obj->clone().release());  // Requires GameObject::clone()
+            if (obj) {
+                auto clone = obj->clone();
+                copy[pos].push_back(clone.get());
+            }   // Requires GameObject::clone()
         }
     }
     return copy;

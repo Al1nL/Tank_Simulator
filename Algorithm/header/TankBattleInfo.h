@@ -40,7 +40,12 @@ namespace Algorithm_212535058_324022904
 
     public:
         TankBattleInfo(int tank_index, int player_id);
-        ~TankBattleInfo() override = default;
+        ~TankBattleInfo() override {
+            // Clear containers (though not strictly necessary as they'll auto-clean)
+            knownObjects.clear();
+            objectStorage.clear();
+            opponents.clear();
+        }
         // Block copy operations
         TankBattleInfo(const TankBattleInfo&) = delete;
         TankBattleInfo& operator=(const TankBattleInfo&) = delete;
@@ -73,11 +78,11 @@ namespace Algorithm_212535058_324022904
         void addOpponent(pair<int, int> position, Direction dir = Direction::None);
   std::vector<std::unique_ptr<GameObject>> takeObjectStorage();
     
-    // Modified to accept rvalue references
-    void setFrameObjects(
-        std::map<std::pair<int,int>, std::vector<GameObject*>>&& newKnownObjects,
-        std::vector<std::unique_ptr<GameObject>>&& newStorage
-    );
+        // Modified to accept rvalue references
+        void setFrameObjects(
+            std::map<std::pair<int,int>, std::vector<GameObject*>>&& newKnownObjects,
+            std::vector<std::unique_ptr<GameObject>>&& newStorage
+        );
         GameObject *getObjectByPosition(pair<int, int> pos) const;
 
         map<pair<int, int>, vector<GameObject *>> getKnownObjects() const;
@@ -88,6 +93,13 @@ namespace Algorithm_212535058_324022904
         pair<int, int> getMapSize() const;
 
         Direction calculateRealDirection(int currRow, int currCol, int targetRow, int targetCol);
+        const std::map<std::pair<int,int>, std::vector<GameObject*>>& getKnownObjectsView() const {
+            return knownObjects;
+        }
+
+        std::map<std::pair<int,int>, std::vector<GameObject*>>& getKnownObjectsForUpdate() {
+            return knownObjects;
+        }
     };
 }
 #endif // TANKBATTLEINFO_H

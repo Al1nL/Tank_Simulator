@@ -243,7 +243,7 @@ ActionRequest MyTankAlgorithm::checkForEscape()
 bool MyTankAlgorithm::willBeHitIn(int row, int col, int t)
 {
 	
-	const auto knownObjects = battle_info->getKnownObjects();
+	const auto& knownObjects = battle_info->getKnownObjectsView();
 	
 	for (const auto &[pos, objects] : knownObjects)
 	{
