@@ -113,7 +113,7 @@ void Player_212535058_324022904::calcShellsDirection(vector<Shell *> knownShells
  */
 vector<Shell *> Player_212535058_324022904::getShellsFromKnownObjects()
 {
-    auto knownObj = dynamic_cast<TankBattleInfo *>(battle_info.get())->getKnownObjects();
+    const auto& knownObj = dynamic_cast<TankBattleInfo *>(battle_info.get())->getKnownObjectsView();
     vector<Shell *> shells;
 
     for (auto &[pos, objs] : knownObj)
@@ -146,7 +146,7 @@ void Player_212535058_324022904::getBattleInfoFromSatelliteView(SatelliteView &v
     auto *tank_info = dynamic_cast<TankBattleInfo *>(battle_info.get());
 
     vector<OppData> opponents;
-    map<pair<int, int>, vector<GameObject *>> knownObjects = tank_info->getKnownObjects();
+    auto& knownObjects = tank_info->getKnownObjectsForUpdate();
     // This will own all the game objects
     vector<unique_ptr<GameObject>> objectStorage;
 

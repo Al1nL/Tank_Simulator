@@ -73,6 +73,10 @@ public:
             worker.join();
         }
     }
+
+    ~ThreadPool() {
+        waitAll();
+    }
 };
 
 #endif //THREADPOOL_H

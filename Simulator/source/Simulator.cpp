@@ -173,7 +173,7 @@ bool Simulator::loadAlgorithm(const std::string &path)
 	try
 	{
 		registrar.validateLastRegistration();
-        
+
 		std::cout << "Successfully loaded Algorithm from " << path << std::endl;
 		return true;
 	}

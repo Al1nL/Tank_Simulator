@@ -33,7 +33,16 @@ namespace GameManager_212535058_324022904
     public:
         BoardManager(const BoardManager &) = delete;
         BoardManager(vector<vector<vector<unique_ptr<GameObject>>>> map, int rows, int cols);
-        ~BoardManager() = default;
+        ~BoardManager() {
+            // Clear all dynamic objects
+            for (auto& row : game_map) {
+                for (auto& cell : row) {
+                    cell.clear();
+                }
+            }
+            fired_shells.clear();
+            boardStates.clear();
+        }
         GameObject *getObjectAt(int x, int y) const;
         vector<vector<char>> objMapToCharMap();
         void updateBoard(size_t x, size_t y, char value);

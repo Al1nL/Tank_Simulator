@@ -27,7 +27,19 @@ namespace GameManager_212535058_324022904
     {
     public:
         explicit GameManager(bool verbose);
-        ~GameManager() {}
+        ~GameManager() {
+            tanks.clear();
+    
+            // Clear player algorithms
+            for (auto& player : player_tanks_algo) {
+                player.second.clear();
+            }
+            player_tanks_algo.clear();
+            
+            // Clear other containers
+            logs.clear();
+            players.clear();
+        }
 
         GameResult run(
             size_t map_width, size_t map_height,

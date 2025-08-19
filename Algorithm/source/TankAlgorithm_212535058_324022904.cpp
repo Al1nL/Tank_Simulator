@@ -59,7 +59,7 @@ ActionRequest TankAlgorithm_212535058_324022904::decideAction() {
 			return res;
 		if(battle_info->getRemainingShells() > 0 && !battle_info->isWaitingToShoot())
 			return ActionRequest::Shoot;
-	}
+		}
 	if(willBeHitIn(battle_info->getPosition().first,battle_info->getPosition().second,2)) {
 		ActionRequest res;
 		res =calculateBestEscapeRotation();
@@ -74,8 +74,8 @@ ActionRequest TankAlgorithm_212535058_324022904::decideAction() {
 
 
     // Shoot if aligned and safe
-    if (shouldShootOpponent(opp) && !battle_info->isWaitingToShoot()) {
-        return  ActionRequest::Shoot;
+    if (shouldShootOpponent(opp)){
+		return  ActionRequest::Shoot;
     }
 
 	if(current_turn - last_info_update > tank_index + 4){
@@ -97,8 +97,11 @@ ActionRequest TankAlgorithm_212535058_324022904::decideAction() {
     }
 
     // Default fallback ActionRequest
-    ActionRequest r =calculateBestEscapeRotation();
-    return r == ActionRequest::DoNothing ? ActionRequest::GetBattleInfo : r;
+	ActionRequest escapeRotation = calculateBestEscapeRotation();
+	if (escapeRotation != ActionRequest::DoNothing) {
+		return escapeRotation;
+	}
+	return ActionRequest::GetBattleInfo;
 }
 
 
@@ -275,8 +278,8 @@ int TankAlgorithm_212535058_324022904::countOpenSpaceInDirection(pair<int,int> p
  */
 void TankAlgorithm_212535058_324022904::moveKnownShells()
 {
-	auto knownObj = battle_info->getKnownObjects();
-	auto copyKnownObj = battle_info->getKnownObjects();
+	auto& knownObj = battle_info->getKnownObjectsForUpdate();
+	auto& copyKnownObj = battle_info->getKnownObjectsForUpdate();
 	vector<pair<int,int>> pos_to_del;
 
 	for (auto& [pos, objs] : knownObj){
@@ -312,6 +315,6 @@ void TankAlgorithm_212535058_324022904::moveKnownShells()
     for(auto pos : pos_to_del) {
       copyKnownObj.erase(pos);
     }
-
+	pos_to_del.clear();
     battle_info->setKnownObjects(copyKnownObj);
 }
