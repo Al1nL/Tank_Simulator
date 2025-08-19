@@ -391,12 +391,15 @@ namespace GameManager_212535058_324022904
                                       const std::string &name1,
                                       const std::string &name2)
     {
+        string map_name = fs::path(filePath).stem().string();
         std::string dir = "GM_212535058_324022904_Results";
-
+        std::string subdir = name1 + "_vs_" + name2;
+        std::string fullDir = dir + "/" + subdir + "/" + map_name;
+    
         // Create directory if it doesn't exist
         fs::create_directories(dir);
-
-        string map_name = fs::path(filePath).stem().string();
-        output_file = dir + "/output_P1_" + name1 + "_P2_" + name2 + "_" + map_name + ".txt";
+        fs::create_directories(dir + "/" + subdir);
+        fs::create_directories(fullDir);
+        output_file = fullDir + "/output_P1_" + name1 + "_P2_" + name2 + "_" + map_name + ".txt";
     }
 }
