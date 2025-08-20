@@ -5,7 +5,7 @@
 #include "../header/MapReader.h"
 
 namespace fs = std::filesystem;
-bool Simulator::initGame(int argc, char *argv[])
+bool Simulator::init(int argc, char *argv[])
 {
 	// Parse command line arguments
 	config_ = parseArguments(argc, argv);

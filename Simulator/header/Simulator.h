@@ -47,7 +47,7 @@ public:
   Simulator(Simulator const &) = delete;
   Simulator &operator=(const Simulator &) = delete;
   ~Simulator();
-  bool initGame(int argc, char *argv[]);
+  bool init(int argc, char *argv[]);
   void run();
 
 private:
