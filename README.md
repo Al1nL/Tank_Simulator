@@ -65,7 +65,7 @@ Maps can contain any of these symbols throughout the game:
 - `1` — Tank (Player 1)  
 - `2` — Tank (Player 2)  
 - `*` - Shell
-- (space) — Empty  
+- ` ` — Empty  
 
 ---
 
