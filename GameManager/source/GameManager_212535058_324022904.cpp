@@ -406,6 +406,5 @@ namespace GameManager_212535058_324022904
 									   .count());
 
         output_file = fullDir + "/output_" + name1 + "_vs_" + name2 + "_" + map_name + "_" + time_str + ".txt";
-        cerr << "Game Output file: " << output_file << endl;
     }
 }
