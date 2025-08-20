@@ -10,7 +10,7 @@ SRC_DIR := ./source
 TARGET := GameManager_212535058_324022904.so
 
 # Source files
-GAMEMANAGER_CPP := $(SRC_DIR)/GameManager.cpp \
+GAMEMANAGER_CPP := $(SRC_DIR)/GameManager_212535058_324022904.cpp \
                    $(SRC_DIR)/BoardManager.cpp
 USER_COMMON_CPP := $(wildcard ../UserCommon/source/*.cpp)
 

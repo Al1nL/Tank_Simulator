@@ -1,4 +1,4 @@
-#include "../header/GameManager.h"
+#include "../header/GameManager_212535058_324022904.h"
 #include "../../common/GameManagerRegistration.h"
 
 namespace GameManager_212535058_324022904
@@ -395,11 +395,17 @@ namespace GameManager_212535058_324022904
         std::string dir = "GM_212535058_324022904_Results";
         std::string subdir = name1 + "_vs_" + name2;
         std::string fullDir = dir + "/" + subdir + "/" + map_name;
-    
         // Create directory if it doesn't exist
         fs::create_directories(dir);
         fs::create_directories(dir + "/" + subdir);
         fs::create_directories(fullDir);
-        output_file = fullDir + "/output_P1_" + name1 + "_P2_" + name2 + "_" + map_name + ".txt";
+        
+        auto now = std::chrono::system_clock::now();
+	auto time_str = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
+									   now.time_since_epoch())
+									   .count());
+
+        output_file = fullDir + "/output_" + name1 + "_vs_" + name2 + "_" + map_name + "_" + time_str + ".txt";
+        cerr << "Game Output file: " << output_file << endl;
     }
 }

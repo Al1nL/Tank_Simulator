@@ -1,5 +1,5 @@
-#ifndef GAMEMANAGER
-#define GAMEMANAGER
+#ifndef GAMEMANAGER_212535058_324022904
+#define GAMEMANAGER_212535058_324022904
 #include <filesystem>
 namespace fs = std::filesystem;
 
