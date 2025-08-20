@@ -64,8 +64,8 @@ Maps can contain any of these symbols throughout the game:
 - `@` — Mine  
 - `1` — Tank (Player 1)  
 - `2` — Tank (Player 2)  
-- `*` - Shell
-- ` ` — Empty  
+- `*` — Shell
+- ` ` — Empty cell 
 
 ---
 
