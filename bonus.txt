@@ -1,0 +1,18 @@
+We added a minimal visualizations of each step in the game by writing the game board states throughout the game to a file named gameSteps_<filename>.txt.
+The filename is the outputFileName of the GameManager.
+
+Related Code in BoardManager.cpp:
+printBoard():
+Called during each game loop iteration to capture the current board state.
+Converts the grid into a string representation and appends it to boardStates.
+Uses symbols like 1, 2, #, @, S, and spaces to represent game elements.
+
+boardStates Vector:
+Stores the string representations of the board at each turn.
+Populated by printBoard() and cleared by writeBoardStates() after writing to the file.
+
+Related Code in GameManager.cpp:
+the run function Calls board->printBoard() in each iteration of the game loop to update boardStates.
+and by the end of the game loop, Calls board->writeBoardStates(outputFile) to write the accumulated board states to a file before the game ends.
+
+when -verbose flag is among the arguments, both output and gamesteps visualization will be made.
