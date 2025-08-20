@@ -53,8 +53,8 @@ The simulator is modular: each part (Simulator, GameManager, Algorithm) should w
        GM_212535058_324022904/alg1_vs_alg2/map_name/
        ```
      - Each map folder contains:  
-       1. `output_alg1_vs_alg2_map_name.txt` — detailed game log.  
-       2. `gamesteps_output_alg1_vs_alg2_map_name.txt` — step-by-step visualization of the game flow.  
+       1. `output_alg1_vs_alg2_map_name_<timestamp>.txt` — detailed game log.  
+       2. `gamesteps_output_alg1_vs_alg2_map_name_<timestamp>.txt` — step-by-step visualization of the game flow.  
 
 ---
 
