@@ -2,7 +2,7 @@
 CXX := g++
 CXXFLAGS := -std=c++20 -Wall -Wextra -Werror -pedantic 
 LDFLAGS := -ldl -rdynamic 
-TARGET := simulator_212535058_324022904
+TARGET := ../simulator_212535058_324022904
 
 # Source files (adjust paths as needed)
 SRC_DIR := ./source

@@ -5,7 +5,7 @@ MAPS_DIR="./maps_squared"
 ALGOS_DIR="./Algorithms"
 GM_DIR="./GameManager"
 OUT_DIR="./logs"
-MAIN_EXEC="./main"
+MAIN_EXEC="./simulator_212535058_324022904"
 
 # Check if executable exists
 if [[ ! -x "$MAIN_EXEC" ]]; then
