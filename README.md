@@ -39,7 +39,8 @@ The simulator is modular: each part (Simulator, GameManager, Algorithm) should w
 - The simulator produces two types of outputs:  
 
   1. **Overall results file** (for comparative/competition mode):  
-     - Located in `./<mode>_results_<timestamp>.txt`.
+     - comparative mode - `<GameManagers_Folder>/comparative_results_<timestamp>.txt`.
+     - competition mode - `<Algorithms_Folder>/competition_results_<timestamp>.txt`.
 
   2. **Our GameManager results** (only when the `-verbose` flag is provided):  
      - Stored under `GM_212535058_324022904/`.  
