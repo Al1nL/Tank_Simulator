@@ -1,7 +1,5 @@
 #include "../header/TankAlgorithm_212535058_324022904.h"
-#include "../../common/TankAlgorithmRegistration.h"
-#include "../header/TankBattleInfo.h"
-#include "../../UserCommon/header/Shell.h"
+
 
 using namespace UserCommon_212535058_324022904;
 using namespace Algorithm_212535058_324022904;

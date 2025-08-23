@@ -1,7 +1,5 @@
 #ifndef BOARDMANAGER_H
 #define BOARDMANAGER_H
-#include <filesystem>
-namespace fs = std::filesystem;
 
 #include "../../UserCommon/header/GameObject.h"
 #include "../../UserCommon/header/Tank.h"
@@ -16,6 +14,8 @@ namespace fs = std::filesystem;
 #include <iostream>
 #include <map>
 #include <algorithm>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 using std::vector, std::unique_ptr, std::string, std::stringstream, std::map, std::cerr, std::endl, std::ofstream;
 using namespace UserCommon_212535058_324022904;
@@ -27,7 +27,7 @@ namespace GameManager_212535058_324022904
         int height;
         int width;
         vector<vector<vector<unique_ptr<GameObject>>>> game_map;
-        vector <Shell*> fired_shells; // changed to vector of raw pointers for easier access
+        vector <Shell*> fired_shells;
         vector<string> boardStates;
 
     public:

@@ -1,13 +1,32 @@
 #include "../header/GameManager_212535058_324022904.h"
-#include "../../common/GameManagerRegistration.h"
 
 namespace GameManager_212535058_324022904
 {
 
     REGISTER_GAME_MANAGER(GameManager);
-
+    
+    /**
+     * @brief Constructs a GameManager instance.
+     * @param verbose Boolean flag to enable/disable verbose logging during the game.
+     */
     GameManager::GameManager(bool verbose) : verbose(verbose) {}
-
+    
+    /**
+     * @brief Runs the game simulation between two players using the provided map and configurations.
+     * @param map_width Width of the game map.
+     * @param map_height Height of the game map.
+     * @param map SatelliteView representing the static game map (snapshot).
+     * @param map_name Name of the map used for logging.
+     * @param maxSteps Maximum number of steps allowed in the game.
+     * @param numShells Initial number of shells for each tank.
+     * @param player1 Reference to Player 1 instance.
+     * @param name1 Name of Player 1.
+     * @param player2 Reference to Player 2 instance.
+     * @param name2 Name of Player 2.
+     * @param player1_tank_algo_factory Factory to create tank algorithms for Player 1.
+     * @param player2_tank_algo_factory Factory to create tank algorithms for Player 2.
+     * @return GameResult object containing the outcome of the game.
+     */
     GameResult GameManager::run(
         size_t map_width, size_t map_height,
         const SatelliteView &map, // <= assume it is a snapshot, NOT updated
@@ -63,6 +82,10 @@ namespace GameManager_212535058_324022904
         return result;
     }
 
+    /**
+     * @brief Initializes the board based on the given map snapshot.
+     * @param map SatelliteView representing the static game map.
+     */
     void GameManager::initializeBoard(const SatelliteView &map)
     {
         vector<vector<vector<unique_ptr<GameObject>>>> game_map(rows);
@@ -109,7 +132,12 @@ namespace GameManager_212535058_324022904
         board = make_unique<BoardManager>(std::move(game_map), rows, cols);
         board_view = make_unique<BoardSatelliteView>(rows, cols, board->objMapToCharMap());
     }
-
+    
+    /**
+     * @brief Initializes tank algorithms for each player using their respective factories.
+     * @param player1_factory Algorithm factory for Player 1 tanks.
+     * @param player2_factory Algorithm factory for Player 2 tanks.
+     */
     void GameManager::initializeTanks(
         TankAlgorithmFactory &player1_factory,
         TankAlgorithmFactory &player2_factory)
@@ -124,7 +152,10 @@ namespace GameManager_212535058_324022904
             }
         }
     }
-
+    
+    /**
+     * @brief Processes a single round in the game: move shells, collect and apply actions, and updates states.
+     */
     void GameManager::processRound()
     {
         board->moveFiredShells();
@@ -154,6 +185,10 @@ namespace GameManager_212535058_324022904
         board->boardCleanup();
     }
 
+    /**
+     * @brief Prepares the result of the game.
+     * @return GameResult structure containing remaining tanks, winner, reason, and game state.
+     */
     GameResult GameManager::prepareResult()
     {
         GameResult result;
@@ -193,6 +228,10 @@ namespace GameManager_212535058_324022904
         return result;
     }
 
+    /**
+     * @brief Checks if the game has reached a terminal condition.
+     * @return True if the game is over, false otherwise.
+     */
     bool GameManager::isGameOver()
     {
         int p1_tanks = countAliveTanks(1);
@@ -203,12 +242,21 @@ namespace GameManager_212535058_324022904
                current_step >= max_steps || // Timeout
                steps_since_no_shells >= 40; // No shells left for 40 steps
     }
-
+    /**
+     * @brief Counts the number of alive tanks for a given player.
+     * @param player_id ID of the player (1 or 2).
+     * @return Number of alive tanks for the player.
+     */
     int GameManager::countAliveTanks(int player_id)
     {
         return player_tank_count[player_id];
     }
 
+    /**
+     * @brief Finds the algorithm associated with a specific tank.
+     * @param tank Pointer to the Tank object.
+     * @return Pointer to the TankAlgorithm if found, nullptr otherwise.
+     */
     TankAlgorithm *GameManager::findTankAlgorithmById(Tank *tank)
     {
         // Find the player's algorithm map
@@ -230,6 +278,9 @@ namespace GameManager_212535058_324022904
         return nullptr;
     }
 
+    /**
+     * @brief Updates internal tracking info for tanks: positions, kills, shells, and battle info requests.
+     */
     void GameManager::updateTanksInfo()
     {
         for (Tank *tank : tanks)
@@ -265,7 +316,7 @@ namespace GameManager_212535058_324022904
             }
         }
     }
-    // Logging funcs
+    /** -----------------------------  Logging functions -------------------------------- **/
 
     /**
      * @brief Converts the actions of tanks(in order as "born" on the map) for a round into a formatted string output.
@@ -387,11 +438,17 @@ namespace GameManager_212535058_324022904
         }
     }
 
-    void GameManager::setupOutputFile(const std::string &filePath,
+    /**
+     * @brief Sets up the path for the output file and creates necessary directories.
+     * @param name Map name.
+     * @param name1 Name of Player 1.
+     * @param name2 Name of Player 2.
+     */
+    void GameManager::setupOutputFile(const std::string &name,
                                       const std::string &name1,
                                       const std::string &name2)
     {
-        string map_name = fs::path(filePath).stem().string();
+        string map_name = fs::path(name).stem().string();
         std::string dir = "GM_212535058_324022904_Results";
         std::string subdir = name1 + "_vs_" + name2;
         std::string fullDir = dir + "/" + subdir + "/" + map_name;
@@ -399,11 +456,11 @@ namespace GameManager_212535058_324022904
         fs::create_directories(dir);
         fs::create_directories(dir + "/" + subdir);
         fs::create_directories(fullDir);
-        
+
         auto now = std::chrono::system_clock::now();
-	auto time_str = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
-									   now.time_since_epoch())
-									   .count());
+        auto time_str = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                           now.time_since_epoch())
+                                           .count());
 
         output_file = fullDir + "/output_" + name1 + "_vs_" + name2 + "_" + map_name + "_" + time_str + ".txt";
     }

@@ -15,6 +15,8 @@
 #include "../header/AlgorithmRegistrar.h"
 #include "../header/GameManagerRegistrar.h"
 #include "../header/MapReader.h"
+#include "../header/ThreadPool.h"
+#include "../../common/GameResult.h"
 
 namespace fs = std::filesystem;
 class GameResult;
@@ -74,6 +76,14 @@ private:
 
   void printUsage(const std::string &error_msg = "", const std::vector<std::string> &invalid_args = {});
   Config parseArguments(int argc, char *argv[]);
+  // parse helpers
+  void parseMode(const std::string &mode, Config &args, std::vector<std::string> &required_args);
+  void parseKeyValueArguments(int argc, char *argv[], Config &args, std::vector<std::string> &invalid_args);
+  void parseNumThreads(const std::string &value, Config &args);
+  void checkRequiredArguments(const Config &args, const std::vector<std::string> &required_args);
+  void checkInvalidArguments(const std::vector<std::string> &invalid_args);
+  void validatePaths(const Config &args);
+
   std::string generateOutputFilename(const std::string &folder, const std::string &prefix);
   std::string getBaseName(const std::string &filename);
   void logResults(std::unordered_map<std::string, std::vector<std::string>>, std::ofstream &);

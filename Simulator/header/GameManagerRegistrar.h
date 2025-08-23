@@ -21,7 +21,6 @@ class GameManagerRegistrar {
             : so_name(name), library_handle(handle) {}
 
         void setFactory(GameManagerFactory&& f) {
-            // assert(factory == nullptr);
             factory = std::move(f);
         }
         void setHandle(void* handle) {
@@ -100,10 +99,6 @@ public:
     std::size_t count() const {
         return game_managers.size();
     }
-
-    // void clear() {
-    //     game_managers.clear();
-    // }
 
     void cleanup() {
         for (auto& entry : game_managers) {

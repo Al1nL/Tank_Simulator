@@ -28,7 +28,7 @@ The simulator is modular: each part (Simulator, GameManager, Algorithm) should w
    This builds all 3 parts (Simulator, GameManager, Algorithm).  
 2. Alternatively, each folder (`Simulator/`, `GameManager/`, `Algorithm/`) has its own `Makefile` to build individually.  
 3. Output:  
-   - `./simulator_212535058_324022904` (Simulator executable)  
+   - `./simulator_212535058_324022904` (Simulator executable - inside Simulator folder)  
    - `GameManager_212535058_324022904.so` (shared library - inside GamaManager folder)  
    - `Algorithm_212535058_324022904.so` (shared library - inside Algorithm folder)  
 

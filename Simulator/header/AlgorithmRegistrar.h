@@ -3,6 +3,7 @@
 #include <dlfcn.h>
 #include <vector>
 #include <cassert>
+#include <string>
 #include "../../common/Player.h"
 #include "../../common/TankAlgorithm.h"
 
@@ -122,13 +123,14 @@ public:
     std::size_t count() const { return algorithms.size(); }
 
     void cleanup(){
-    // Phase 1: Clear all factories
+    // Clear all factories
         for (auto& entry : algorithms) {
             entry.setPlayerFactory(nullptr);
             entry.setTankAlgorithmFactory(nullptr);
         }
         algorithms.clear();
 
+    // Close all handles
         for (auto algo : algorithms) {
             if (algo.getHandle() != nullptr) dlclose(algo.getHandle());
         }

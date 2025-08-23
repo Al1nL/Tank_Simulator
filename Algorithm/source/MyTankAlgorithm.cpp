@@ -1,8 +1,5 @@
 #include "../header/MyTankAlgorithm.h"
-#include "../header/TankBattleInfo.h"
-#include "../../UserCommon/header/Shell.h"
 
-using namespace UserCommon_212535058_324022904;
 using namespace Algorithm_212535058_324022904;
 
 /**
@@ -199,7 +196,7 @@ bool MyTankAlgorithm::canSafelyBack(int backR, int backC)
 	if (!battle_info->getMovedBackwardLast())
 	{
 		if (willBeHitIn(r, c, 1) || willBeHitIn(r, c, 2) || willBeHitIn(backR, backC, 3))
-		{				  //
+		{				  
 			return false; // Danger in current or backward position
 		}
 	}

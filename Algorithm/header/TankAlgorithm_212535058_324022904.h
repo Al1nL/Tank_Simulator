@@ -1,13 +1,7 @@
 #ifndef TANKALGORITHM_212535058_324022904_H
 #define TANKALGORITHM_212535058_324022904_H
-
-
+#include "../../common/TankAlgorithmRegistration.h"
 #include "MyTankAlgorithm.h"
-
-#include "TankBattleInfo.h"
-
-#include <memory>
-#include <utility>
 #include <queue>
 #include <algorithm>
 

@@ -5,9 +5,9 @@
 #include "../../UserCommon/header/GameObject.h"
 #include "TankBattleInfo.h"
 
-#include <memory>
-
 using std::pair, std::vector, std::abs, std::make_unique, std::unique_ptr;
+using namespace UserCommon_212535058_324022904;
+
 namespace Algorithm_212535058_324022904
 {
     class MyTankAlgorithm : public TankAlgorithm

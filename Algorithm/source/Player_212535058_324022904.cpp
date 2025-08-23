@@ -1,14 +1,5 @@
 #include "../header/Player_212535058_324022904.h"
-#include "../header/TankAlgorithm_212535058_324022904.h"
-#include "../../common/PlayerRegistration.h"
-#include "../../common/SatelliteView.h"
-#include "../../UserCommon/header/Shell.h"
-#include "../../UserCommon/header/Tank.h"
-#include "../../UserCommon/header/Mine.h"
-#include "../../UserCommon/header/Wall.h"
-#include "../header/TankBattleInfo.h"
 
-using namespace UserCommon_212535058_324022904;
 using namespace Algorithm_212535058_324022904;
 REGISTER_PLAYER(Player_212535058_324022904);
 
@@ -170,7 +161,7 @@ void Player_212535058_324022904::getBattleInfoFromSatelliteView(SatelliteView &v
 
             if (symbol == ' ')
             {
-                if (knownObjects.contains(pos))
+                if (knownObjects.find(pos) != knownObjects.end())
                     knownObjects.erase(pos);
                 continue;
             }

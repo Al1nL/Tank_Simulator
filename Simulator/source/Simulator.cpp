@@ -1,10 +1,12 @@
 #include "../header/Simulator.h"
-#include "../header/AlgorithmRegistrar.h"
-#include "../header/ThreadPool.h"
-#include "../../common/GameResult.h"
-#include "../header/MapReader.h"
 
-namespace fs = std::filesystem;
+/**
+ *	@brief Initializes the simulator with command line arguments.
+ *	@details Parses command line arguments and sets up the configuration.
+ *	@param argc The number of command line arguments.
+ *	@param argv The array of command line arguments.
+ *	@returns true if initialization is successful, false otherwise.
+ */
 bool Simulator::init(int argc, char *argv[])
 {
 	// Parse command line arguments
@@ -13,7 +15,11 @@ bool Simulator::init(int argc, char *argv[])
 	// Initialize the game based on the mode
 	return initialize(config_);
 }
-
+/**
+ * @brief Initializes the simulator in comparative mode.
+ * @details Sets up the necessary components for running a comparative simulation.
+ * @return true if initialization is successful, false otherwise.
+ */
 bool Simulator::initializeComparativeMode()
 {
 
@@ -50,6 +56,11 @@ bool Simulator::initializeComparativeMode()
 	return true;
 }
 
+/**
+ * @brief Initializes the simulator in competition mode.
+ * @details Sets up the necessary components for running a competition simulation.
+ * @return true if initialization is successful, false otherwise.
+ */
 bool Simulator::initializeCompetitionMode()
 {
 	// Load the game manager
@@ -85,6 +96,11 @@ bool Simulator::initializeCompetitionMode()
 	return true;
 }
 
+/**
+ * @brief Initializes the simulator with the given configuration.
+ * @param config The configuration to initialize the simulator with.
+ * @return true if initialization is successful, false otherwise.
+ */
 bool Simulator::initialize(const Config &config)
 {
 	config_ = config;
@@ -101,10 +117,15 @@ bool Simulator::initialize(const Config &config)
 	}
 }
 
+/**
+ * @brief Loads a game manager from the specified path.
+ * @param path The path to the game manager shared library.
+ * @return true if loading is successful, false otherwise.
+ */
 bool Simulator::loadGameManager(const std::string &path)
 {
 	auto &registrar = GameManagerRegistrar::getGameManagerRegistrar();
-	registrar.createGameManagerEntry(getBaseName(path));
+	registrar.createGameManagerEntry(fs::path(path).stem().string());
 
 	void *handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
 	if (!handle)
@@ -133,10 +154,15 @@ bool Simulator::loadGameManager(const std::string &path)
 	}
 }
 
+/**
+ * @brief Loads an algorithm from the specified path.
+ * @param path The path to the algorithm shared library.
+ * @return true if loading is successful, false otherwise.
+ */
 bool Simulator::loadAlgorithm(const std::string &path)
 {
 	auto &registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
-	std::string baseName = getBaseName(path);
+	std::string baseName = fs::path(path).stem().string();
 
 	// Check if we already loaded this exact file
 	bool isRegistred = false;
@@ -191,6 +217,11 @@ bool Simulator::loadAlgorithm(const std::string &path)
 	}
 }
 
+/**
+ * @brief Loads all maps from the specified path.
+ * @param path The path to the directory containing map files / to the map file.
+ * @return true if loading is successful, false otherwise.
+ */
 bool Simulator::loadAllMaps(const std::string &path)
 {
 	if (!fs::is_directory(path))
@@ -216,49 +247,90 @@ bool Simulator::loadAllMaps(const std::string &path)
 	return !mapInfo_.empty();
 }
 
+/**
+ * @brief Parses command-line arguments and returns a Config object.
+ *
+ * This function orchestrates the parsing, validation, and verification of
+ * command-line arguments for the simulator. It checks the mode, flags,
+ * required key=value arguments, invalid arguments, and validates file paths.
+ *
+ * @param argc Argument count.
+ * @param argv Argument values.
+ * @return Config object containing parsed values.
+ */
 Config Simulator::parseArguments(int argc, char *argv[])
 {
-	Config args;
-	std::vector<std::string> invalid_args;
-	std::vector<std::string> required_args;
-
 	if (argc < 2)
-	{
 		printUsage("Not enough arguments");
-	}
 
-	// Check mode
-	string mode = argv[1];
-	if (mode != "-comparative" && mode != "-competition")
-	{
-		printUsage("Invalid mode specified", {mode});
-	}
+	Config args;
+	std::vector<std::string> required_args;
+	std::vector<std::string> invalid_args;
 
-	// Set required arguments based on mode
+	// Determine mode
+	std::string mode = argv[1];
+	parseMode(mode, args, required_args);
+
+	// Parse key=value and flags
+	parseKeyValueArguments(argc, argv, args, invalid_args);
+
+	// Check required and invalid arguments
+	checkRequiredArguments(args, required_args);
+	checkInvalidArguments(invalid_args);
+
+	// Validate file paths
+	validatePaths(args);
+
+	return args;
+}
+
+/**
+ * @brief Determines the simulator mode and sets required arguments for that mode.
+ *
+ * @param mode The mode string from command-line arguments (e.g., "-comparative").
+ * @param args Config object to store the parsed mode.
+ * @param required_args Vector to store the names of required arguments for the mode.
+ */
+void Simulator::parseMode(const std::string &mode, Config &args, std::vector<std::string> &required_args)
+{
 	if (mode == "-comparative")
 	{
 		args.mode = Comparative;
 		required_args = {"game_map", "game_managers_folder", "algorithm1", "algorithm2"};
 	}
-	else
+	else if (mode == "-competition")
 	{
 		args.mode = Competition;
 		required_args = {"game_maps_folder", "game_manager", "algorithms_folder"};
 	}
+	else
+	{
+		printUsage("Invalid mode specified", {mode});
+	}
+}
 
-	// Parse arguments
+/**
+ * @brief Parses command-line key=value pairs and flags like -verbose.
+ *
+ * @param argc Argument count.
+ * @param argv Argument values.
+ * @param args Config object to store parsed values.
+ * @param invalid_args Vector to store unrecognized or invalid arguments.
+ */
+void Simulator::parseKeyValueArguments(int argc, char *argv[], Config &args, std::vector<std::string> &invalid_args)
+{
 	for (int i = 2; i < argc; ++i)
 	{
 		std::string arg = argv[i];
 
-		// Handle flags
+		// Verbose flag
 		if (arg == "-verbose")
 		{
 			args.verbose = true;
 			continue;
 		}
 
-		// Handle key=value pairs
+		// Key=value pair
 		size_t eq_pos = arg.find('=');
 		if (eq_pos == std::string::npos)
 		{
@@ -271,91 +343,109 @@ Config Simulator::parseArguments(int argc, char *argv[])
 
 		if (key == "num_threads")
 		{
-			try
-			{
-				args.num_threads = std::stoi(value);
-				if (args.num_threads < 1)
-				{
-					printUsage("num_threads must be positive");
-				}
-			}
-			catch (...)
-			{
-				printUsage("Invalid num_threads value");
-			}
+			parseNumThreads(value, args);
 		}
 		else
 		{
 			args.arguments[key] = value;
 		}
 	}
+}
 
-	// Check for missing required arguments
+/**
+ * @brief Parses and validates the num_threads argument.
+ *
+ * @param value String representing the number of threads.
+ * @param args Config object where the parsed number of threads will be stored.
+ */
+void Simulator::parseNumThreads(const std::string &value, Config &args)
+{
+	try
+	{
+		args.num_threads = std::stoi(value);
+		if (args.num_threads < 1)
+			printUsage("num_threads must be positive");
+	}
+	catch (...)
+	{
+		printUsage("Invalid num_threads value");
+	}
+}
+
+/**
+ * @brief Checks if all required arguments are present in the parsed Config.
+ *
+ * @param args Config object containing parsed arguments.
+ * @param required_args Vector of argument names that are required.
+ */
+void Simulator::checkRequiredArguments(const Config &args, const std::vector<std::string> &required_args)
+{
 	std::vector<std::string> missing_args;
 	for (const auto &req : required_args)
 	{
 		if (args.arguments.find(req) == args.arguments.end())
-		{
 			missing_args.push_back(req);
-		}
 	}
 
 	if (!missing_args.empty())
-	{
 		printUsage("Missing required arguments", missing_args);
-	}
+}
 
+/**
+ * @brief Checks for invalid/unrecognized arguments collected during parsing.
+ *
+ * @param invalid_args Vector of argument strings that were not recognized.
+ */
+void Simulator::checkInvalidArguments(const std::vector<std::string> &invalid_args)
+{
 	if (!invalid_args.empty())
-	{
 		printUsage("Invalid arguments provided", invalid_args);
-	}
+}
 
-	// Validate file paths
+/**
+ * @brief Validates filesystem paths for maps, algorithms, and game managers.
+ *
+ * Checks that files exist or folders are valid depending on the mode.
+ * Throws usage error if validation fails.
+ *
+ * @param args Config object containing parsed arguments and mode.
+ */
+void Simulator::validatePaths(const Config &args)
+{
 	try
 	{
 		if (args.mode == Comparative)
 		{
-			if (!fs::exists(args.arguments["game_map"]))
-			{
+			if (!fs::exists(args.arguments.at("game_map")))
 				printUsage("Game map file does not exist");
-			}
-			if (!fs::is_directory(args.arguments["game_managers_folder"]))
-			{
+			if (!fs::is_directory(args.arguments.at("game_managers_folder")))
 				printUsage("Game managers folder is invalid");
-			}
-			if (!fs::exists(args.arguments["algorithm1"]))
-			{
+			if (!fs::exists(args.arguments.at("algorithm1")))
 				printUsage("Algorithm1 file does not exist");
-			}
-			if (!fs::exists(args.arguments["algorithm2"]))
-			{
+			if (!fs::exists(args.arguments.at("algorithm2")))
 				printUsage("Algorithm2 file does not exist");
-			}
 		}
 		else
 		{
-			if (!fs::is_directory(args.arguments["game_maps_folder"]))
-			{
+			if (!fs::is_directory(args.arguments.at("game_maps_folder")))
 				printUsage("Game maps folder is invalid");
-			}
-			if (!fs::exists(args.arguments["game_manager"]))
-			{
+			if (!fs::exists(args.arguments.at("game_manager")))
 				printUsage("Game manager file does not exist");
-			}
-			if (!fs::is_directory(args.arguments["algorithms_folder"]))
-			{
+			if (!fs::is_directory(args.arguments.at("algorithms_folder")))
 				printUsage("Algorithms folder is invalid");
-			}
 		}
 	}
 	catch (const fs::filesystem_error &)
 	{
 		printUsage("Filesystem error while validating paths");
 	}
-
-	return args;
 }
 
+/**
+ * @brief Prints the usage information for the simulator.
+ * @param error_msg An optional error message to display.
+ * @param invalid_args A list of invalid arguments provided by the user.
+ */
 void Simulator::printUsage(const std::string &error_msg,
 						   const std::vector<std::string> &invalid_args)
 {
@@ -383,6 +473,10 @@ void Simulator::printUsage(const std::string &error_msg,
 	exit(1);
 }
 
+/**
+ * @brief Runs the simulator.
+ * @details Depending on the mode, either the comparative or competition simulation is executed.
+ */
 void Simulator::run()
 {
 	if (config_.mode == Comparative)
@@ -395,16 +489,17 @@ void Simulator::run()
 	}
 }
 
+/**
+ * @brief Runs the comparative simulation.
+ * @details Executes the comparative simulation using the specified game managers and algorithms.
+ */
 void Simulator::runComparative()
 {
 
 	// Prepare output filename with timestamp
 	auto now = std::chrono::system_clock::now();
-	auto time_str = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
-									   now.time_since_epoch())
-									   .count());
-	fs::path output_path = fs::path(config_.arguments["game_managers_folder"]) /
-						   ("comparative_results_" + time_str + ".txt");
+	auto time_str = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count());
+	fs::path output_path = fs::path(config_.arguments["game_managers_folder"]) / ("comparative_results_" + time_str + ".txt");
 
 	// Try to open output file
 	std::ofstream out_file;
@@ -464,6 +559,10 @@ void Simulator::runComparative()
 	}
 }
 
+/**
+ * @brief Runs the competition simulation.
+ * @details Executes the competition simulation using all combinations of algorithms and maps.
+ */
 void Simulator::runCompetition()
 {
 
@@ -571,25 +670,11 @@ void Simulator::runCompetition()
 	}
 }
 
-std::string Simulator::getBaseName(const std::string &filename)
-{
-	// Find the last '.' in the string
-	size_t last_dot = filename.find_last_of('.');
-	size_t last_slash = filename.find_last_of("/\\");
-
-	// If no slash, start from the beginning
-	size_t start_pos = (last_slash == std::string::npos) ? 0 : last_slash + 1;
-
-	// If no dot or dot is before the last slash (e.g., "dir/file"), return from start_pos to end
-	if (last_dot == std::string::npos || last_dot < start_pos)
-	{
-		return filename.substr(start_pos);
-	}
-
-	// Otherwise, return from start_pos to last_dot (excluding the extension)
-	return filename.substr(start_pos, last_dot - start_pos);
-}
-
+/**
+ * @brief Runs a single comparative game.
+ * @param manager_number The game manager number to use.
+ * @return The result of the game.
+ */
 GameResult Simulator::runSingleComparativeGame(int manager_number)
 {
 	try
@@ -642,6 +727,13 @@ GameResult Simulator::runSingleComparativeGame(int manager_number)
 		return {};
 	}
 }
+
+/**
+ * @brief Generates a message summarizing the game result.
+ * @param result The result of the game.
+ * @param max_steps The maximum number of steps allowed in the game.
+ * @return A string message summarizing the game result.
+ */
 std::string Simulator::getGameResultMsg(const GameResult &result, size_t max_steps)
 {
 	std::string msg;
@@ -657,7 +749,7 @@ std::string Simulator::getGameResultMsg(const GameResult &result, size_t max_ste
 			msg = "Tie, reached max steps = " + std::to_string(max_steps) + ", player 1 has " + std::to_string(result.remaining_tanks[0]) + " tanks, player 2 has " + std::to_string(result.remaining_tanks[1]) + " tanks";
 			break;
 		case GameResult::ZERO_SHELLS:
-			msg = "Tie, both players have zero shells for " + std::to_string(max_steps) + " steps";
+			msg = "Tie, both players have zero shells for 40 steps";
 			break;
 		}
 	}
@@ -673,6 +765,11 @@ std::string Simulator::getGameResultMsg(const GameResult &result, size_t max_ste
 	return msg;
 }
 
+/**
+ * @brief Logs the results of the games to the specified output stream.
+ * @param results The results to log.
+ * @param output The output stream to log to.
+ */
 void Simulator::logResults(std::unordered_map<std::string, std::vector<std::string>> results, std::ofstream &output)
 {
 	// Output results
@@ -681,7 +778,6 @@ void Simulator::logResults(std::unordered_map<std::string, std::vector<std::stri
 		// Parse key components
 		size_t pos1 = key.find('|');
 		size_t pos2 = key.find('|', pos1 + 1);
-		// size_t pos3 = key.find('|', pos2 + 1);
 
 		string winner = key.substr(0, pos1);
 		size_t rounds = std::stoi(key.substr(pos1 + 1, pos2 - pos1 - 1));
@@ -696,12 +792,19 @@ void Simulator::logResults(std::unordered_map<std::string, std::vector<std::stri
 		output << "\n";
 
 		// Output result details
-		output << winner << "\n";
-		output << rounds << "\n";
-		output << game_state + "\n";
+		output << winner << "\n"
+			   << rounds << "\n"
+			   << game_state << "\n";
 	}
 }
 
+/**
+ * @brief Runs a single competition game.
+ * @param map_idx The index of the map to use.
+ * @param algo1_idx The index of the first algorithm to use.
+ * @param algo2_idx The index of the second algorithm to use.
+ * @return The result of the game.
+ */
 GameResult Simulator::runSingleCompetitionGame(size_t map_idx, size_t algo1_idx, size_t algo2_idx)
 {
 	auto &algo_registrar = AlgorithmRegistrar::getAlgorithmRegistrar();
@@ -760,6 +863,10 @@ GameResult Simulator::runSingleCompetitionGame(size_t map_idx, size_t algo1_idx,
 	}
 }
 
+/**
+ * @brief Computes the number of threads to use for the simulation.
+ * @return The number of threads to use.
+ */
 int Simulator::computeThreadCount() const
 {
 	size_t requested_threads = config_.num_threads;
@@ -798,6 +905,9 @@ int Simulator::computeThreadCount() const
 	return worker_threads + 1;
 }
 
+/**
+ * @brief Destroys the simulator and cleans up resources.
+ */
 Simulator::~Simulator()
 {
 	// Clean up loaded libraries

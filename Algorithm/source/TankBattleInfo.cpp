@@ -1,6 +1,4 @@
 #include "../header/TankBattleInfo.h"
-#include "../../UserCommon/header/Shell.h"
-using namespace UserCommon_212535058_324022904;
 using namespace Algorithm_212535058_324022904;
 
 /**
@@ -152,7 +150,8 @@ void TankBattleInfo::addOpponent(pair<int, int> position, Direction dir)
  */
 GameObject *TankBattleInfo::getObjectByPosition(pair<int, int> pos) const
 {
-    return knownObjects.contains(pos) && !knownObjects.at(pos).empty() ? knownObjects.at(pos).size() > 1 ? knownObjects.at(pos)[1] : knownObjects.at(pos)[0] : nullptr;
+    auto it = knownObjects.find(pos);
+    return it != knownObjects.end() && !it->second.empty() ? it->second.size() > 1 ? it->second[1] : it->second[0] : nullptr;
 }
 
 /**

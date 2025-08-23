@@ -1,24 +1,13 @@
 #ifndef GAMEMANAGER_212535058_324022904
 #define GAMEMANAGER_212535058_324022904
-#include <filesystem>
-namespace fs = std::filesystem;
 
 #include "../../common/AbstractGameManager.h"
-#include "../../common/GameResult.h"
-
+#include "./BoardManager.h"
+#include "../../common/GameManagerRegistration.h"
+#include "../../UserCommon/header/BoardSatelliteView.h"
 #include "../../common/Player.h"
 #include "../../common/TankAlgorithm.h"
-#include <memory>
-#include <map>
-#include <vector>
-#include <string>
-#include "./BoardManager.h"
-
-using namespace UserCommon_212535058_324022904;
-
-#include "../../UserCommon/header/BoardSatelliteView.h"
-#include "../../UserCommon/header/Tank.h"
-
+#include "../../common/GameResult.h"
 namespace GameManager_212535058_324022904
 {
     using std::unique_ptr, std::vector, std::map, std::pair, std::move, std::make_unique;

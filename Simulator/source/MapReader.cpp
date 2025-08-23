@@ -1,5 +1,5 @@
 #include "../header/MapReader.h"
-#include <iostream>
+
 using namespace UserCommon_212535058_324022904;
 /**
  * @brief Reads and parses the game board from the input file.
@@ -189,6 +189,17 @@ void MapReader::checkExcessRows(ifstream &file, bool &hasErrors, ofstream &error
 		errorLog << extraRows << " excess rows found. Ignoring them.\n";
 	}
 }
+
+/**
+ * @brief Converts the current game state from a SatelliteView into a string representation.
+ *
+ * Iterates over the rows and columns of the map, retrieving the object at each position
+ * from the provided SatelliteView and appending it to the result string. Each row is
+ * separated by a newline character.
+ *
+ * @param view The SatelliteView object representing the current state of the map.
+ * @return A string representation of the game state, with each row on a new line.
+ */
 string MapReader::gameStateToString(const SatelliteView &view)
 {
 	string result;

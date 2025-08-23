@@ -2,14 +2,13 @@
 #define TANKBATTLEINFO_H
 #include "../../common/BattleInfo.h"
 #include "../../UserCommon/header/GameObject.h"
+#include "../../UserCommon/header/Shell.h"
 #include <utility>
 #include <vector>
 #include <memory>
 #include <map>
 
-using GameObject = UserCommon_212535058_324022904::GameObject;
-using UserCommon_212535058_324022904::Direction;
-
+using namespace UserCommon_212535058_324022904;
 using std::map, std::vector, std::pair, std::unique_ptr, std::make_pair;
 namespace Algorithm_212535058_324022904
 {
@@ -17,6 +16,7 @@ namespace Algorithm_212535058_324022904
     {
         pair<int, int> opponentPos;
         Direction opponentDir = Direction::None;
+        OppData(pair<int, int> pos, Direction dir = Direction::None) : opponentPos(pos), opponentDir(dir) {}
     };
 
     class TankBattleInfo : public BattleInfo

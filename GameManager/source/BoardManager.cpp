@@ -2,7 +2,9 @@
 namespace GameManager_212535058_324022904
 {
 
-    // Constructor: Initializes board dimensions and takes ownership of the game map.
+    /**
+     * @brief Constructor: Initializes board dimensions and takes ownership of the game map.
+     */
     BoardManager::BoardManager(vector<vector<vector<unique_ptr<GameObject>>>> gameMap, int rows, int cols) : height(rows), width(cols), game_map(std::move(gameMap)) {} // printBoard();}
 
     /**
@@ -16,7 +18,7 @@ namespace GameManager_212535058_324022904
     {
         if (x >= height || y >= width)
             return nullptr;
-        return !game_map[x][y].empty() ? game_map[x][y].size() > 1 ? game_map[x][y].back().get() : game_map[x][y][0].get() : nullptr; // if more than one then shell is last and more important
+        return !game_map[x][y].empty() ? game_map[x][y].back().get() : nullptr;
     }
 
     /**
@@ -335,7 +337,7 @@ namespace GameManager_212535058_324022904
             {
                 if (game_map[x][y].size() > 0)
                 {
-                    auto obj = game_map[x][y].size() > 1 ? game_map[x][y][1].get() : game_map[x][y][0].get();
+                    auto obj = game_map[x][y].back().get();
                     charMap[x].push_back(obj && !obj->isDestroyed() ? obj->getSymbol() : ' ');
                 }
                 else // shouldn't reach here

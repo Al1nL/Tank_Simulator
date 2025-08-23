@@ -2,16 +2,19 @@
 #define PLAYER_212535058_324022904_H
 
 #include "../../common/Player.h"
+#include "../../common/SatelliteView.h"
+#include "../../UserCommon/header/Shell.h"
+#include "../../UserCommon/header/Tank.h"
+#include "../../UserCommon/header/Mine.h"
+#include "../../UserCommon/header/Wall.h"
+#include "../header/TankAlgorithm_212535058_324022904.h"
+#include "../../common/PlayerRegistration.h"
 #include <vector>
 #include <memory>
 
-class BattleInfo;
-namespace UserCommon_212535058_324022904 {
-    class Shell;  // Forward declaration
-}
-
-using Shell = UserCommon_212535058_324022904::Shell;
+using namespace UserCommon_212535058_324022904;
 using std::unique_ptr, std::vector,std::make_unique;
+class BattleInfo;
 
 namespace Algorithm_212535058_324022904 {
 
