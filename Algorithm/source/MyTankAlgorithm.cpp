@@ -22,7 +22,6 @@ void MyTankAlgorithm::updateBattleInfo(BattleInfo &info)
 	auto &tank_info = dynamic_cast<TankBattleInfo &>(info);
 	battle_info->setOpponents(tank_info.getOpponents());
 	battle_info->setPosition(tank_info.getPosition().first, tank_info.getPosition().second);
-	battle_info->setDirection(tank_info.getDirection());
 	auto knownObjects = tank_info.getKnownObjects();
 	battle_info->setFrameObjects(
 		std::move(knownObjects.first),  // raw pointer map
@@ -57,10 +56,10 @@ ActionRequest MyTankAlgorithm::getAction()
 pair<int, int> MyTankAlgorithm::nextStep(bool forward, const pair<int, int> pos, const Direction dir)
 {
 	int side = forward ? 1 : -1;
-	auto [h, w] = battle_info->getMapSize();
+    auto [h, w] = battle_info->getMapSize();
 	int newRow = wrap(pos.first + offsets[dir].first * side, h);
 	int newCol = wrap(pos.second + offsets[dir].second * side, w);
-	return {newRow, newCol};
+    return {newRow, newCol};
 }
 
 /**
