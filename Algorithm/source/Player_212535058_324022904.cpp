@@ -1,5 +1,5 @@
 #include "../header/Player_212535058_324022904.h"
-
+#include <iostream>
 using namespace Algorithm_212535058_324022904;
 REGISTER_PLAYER(Player_212535058_324022904);
 
@@ -27,9 +27,7 @@ void Player_212535058_324022904::updateTankWithBattleInfo(TankAlgorithm &tank, S
 {
     auto knownShells = getShellsFromKnownObjects();
     getBattleInfoFromSatelliteView(view);
-
     calcShellsDirection(knownShells);
-
     tank.updateBattleInfo(*battle_info);
     last_battleInfo_step = steps_left;
 }
@@ -42,12 +40,10 @@ void Player_212535058_324022904::updateTankWithBattleInfo(TankAlgorithm &tank, S
  */
 void Player_212535058_324022904::calcShellsDirection(vector<Shell *> knownShells)
 {
-
     int steps_passed = 2 * (last_battleInfo_step - steps_left);
     vector<pair<int, int>> candidates;
-    auto tank_info = dynamic_cast<TankBattleInfo *>(battle_info.get());
-    pair<int, int> new_pos;
-
+    auto *tank_info = dynamic_cast<TankBattleInfo *>(battle_info.get());
+    pair<int, int> new_pos = {-1, -1};
     auto calc_pos = [h = this->map_height, w = this->map_width](const pair<int, int> &pos,
                                                                 const pair<int, int> &dir_offset,
                                                                 int steps)
@@ -66,11 +62,14 @@ void Player_212535058_324022904::calcShellsDirection(vector<Shell *> knownShells
                 new_pos = calc_pos(shell->getPos(), offsets[dir], steps_passed);
                 auto candidate = tank_info->getObjectByPosition(new_pos);
                 if (candidate != nullptr && candidate->getSymbol() == '*')
+                {
                     candidates.push_back(candidate->getPos());
+                }
             }
         }
         else
         {
+            //if(shell->getDirection() > None || shell->getDirection() < U) continue; // Invalid direction
             new_pos = calc_pos(shell->getPos(), offsets[shell->getDirection()], steps_passed);
             auto candidate = tank_info->getObjectByPosition(new_pos);
             if (candidate == nullptr || (candidate != nullptr && candidate->getSymbol() != '*'))
@@ -80,7 +79,9 @@ void Player_212535058_324022904::calcShellsDirection(vector<Shell *> knownShells
                     new_pos = calc_pos(shell->getPos(), offsets[dir], steps_passed);
                     auto candidate = tank_info->getObjectByPosition(new_pos);
                     if (candidate != nullptr && candidate->getSymbol() == '*')
+                    {
                         candidates.push_back(candidate->getPos());
+                    }
                 }
             }
         }
@@ -103,7 +104,6 @@ vector<Shell *> Player_212535058_324022904::getShellsFromKnownObjects()
 {
     const auto &knownObj = dynamic_cast<TankBattleInfo *>(battle_info.get())->getKnownObjectsView();
     vector<Shell *> shells;
-
     for (auto &[pos, objs] : knownObj)
     {
         for (auto &obj : objs)
@@ -113,7 +113,7 @@ vector<Shell *> Player_212535058_324022904::getShellsFromKnownObjects()
                 auto shell = dynamic_cast<Shell *>(obj);
                 if (shell)
                 {
-                    shells.push_back(shell);
+                    shells.push_back(dynamic_cast<Shell*>(shell->clone().get()));
                 }
             }
         }
@@ -134,7 +134,8 @@ void Player_212535058_324022904::getBattleInfoFromSatelliteView(SatelliteView &v
     auto *tank_info = dynamic_cast<TankBattleInfo *>(battle_info.get());
 
     vector<OppData> opponents;
-    auto &knownObjects = tank_info->getKnownObjectsForUpdate();
+    std::map<std::pair<int, int>, std::vector<GameObject *>> newKnownObjects;
+
     // This will own all the game objects
     vector<unique_ptr<GameObject>> objectStorage;
 
@@ -161,50 +162,41 @@ void Player_212535058_324022904::getBattleInfoFromSatelliteView(SatelliteView &v
 
             if (symbol == ' ')
             {
-                if (knownObjects.find(pos) != knownObjects.end())
-                    knownObjects.erase(pos);
                 continue;
             }
-            vector<GameObject *> vec = knownObjects[pos];
+            vector<GameObject *> vec;
 
-            if (vec.size() > 1 && (symbol == '@' || symbol == '#'))
+            unique_ptr<GameObject> obj;
+            if (symbol == '@')
             {
-                knownObjects[pos].erase(knownObjects[pos].end() - 1);
+                obj = make_unique<Mine>(pos);
             }
-            else
+            else if (symbol == '#')
             {
-                unique_ptr<GameObject> obj;
-                if (symbol == '@' && vec.empty())
+                obj = make_unique<Wall>(pos);
+            }
+            else if (symbol == '*')
+            {
+                obj = make_unique<Shell>(pos, None, -1);
+            }
+            else if (isdigit(symbol))
+            {
+                int player = symbol - '0';
+                obj = make_unique<Tank>(pos, player_index == 1 ? tanki_1++ : tanki_2++, Direction::None, player, shells_per_tank);
+                if (player != player_index)
                 {
-                    obj = make_unique<Mine>(pos);
+                    opponents.push_back(OppData(pos));
                 }
-                else if (symbol == '#' && vec.empty())
-                {
-                    obj = make_unique<Wall>(pos);
-                }
-                else if (symbol == '*')
-                {
-                    obj = make_unique<Shell>(pos, None, -1);
-                }
-                else if (isdigit(symbol))
-                {
-                    int player = symbol - '0';
-                    obj = make_unique<Tank>(pos, player_index == 1 ? tanki_1++ : tanki_2++, Direction::None, player, shells_per_tank);
-                    if (player != player_index)
-                    {
-                        opponents.push_back(OppData(pos));
-                    }
-                }
-                if (obj)
-                {
-                    knownObjects[pos].push_back(obj.get());
-                    objectStorage.push_back(move(obj));
-                }
+            }
+            if (obj)
+            {
+                objectStorage.push_back(move(obj));
+                newKnownObjects[pos].push_back(objectStorage.back().get());
             }
         }
     }
 
-    tank_info->setFrameObjects(move(knownObjects), move(objectStorage));
+    tank_info->setFrameObjects(move(newKnownObjects), move(objectStorage));
     tank_info->setOpponents(opponents);
 }
 
