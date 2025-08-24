@@ -1,7 +1,6 @@
 #include "../header/MyTankAlgorithm.h"
-
 using namespace Algorithm_212535058_324022904;
-
+#include <iostream>
 /**
  * @brief Constructs a MyTankAlgorithm instance with game parameters.
  * @param player_index Index of the player that the tank will belong to.
@@ -24,9 +23,10 @@ void MyTankAlgorithm::updateBattleInfo(BattleInfo &info)
 	battle_info->setOpponents(tank_info.getOpponents());
 	battle_info->setPosition(tank_info.getPosition().first, tank_info.getPosition().second);
 	battle_info->setDirection(tank_info.getDirection());
+	auto knownObjects = tank_info.getKnownObjects();
 	battle_info->setFrameObjects(
-		tank_info.getKnownObjects(),  // raw pointer map
-		tank_info.takeObjectStorage() // unique_ptr storage (moved)
+		std::move(knownObjects.first),  // raw pointer map
+		std::move(knownObjects.second) // unique_ptr storage (moved)
 	);
 	battle_info->setRemainingShells(tank_info.getRemainingShells());
 	battle_info->setMapSize(tank_info.getMapSize().first, tank_info.getMapSize().second);
@@ -142,7 +142,8 @@ bool MyTankAlgorithm::isValidMove(ActionRequest action)
  */
 bool MyTankAlgorithm::isOccupierFree(pair<int, int> pos)
 {
-	return battle_info->getObjectByPosition(pos) == nullptr;
+	GameObject *obj = battle_info->getObjectByPosition(pos);
+	return obj == nullptr;
 }
 
 /**
@@ -242,7 +243,6 @@ bool MyTankAlgorithm::willBeHitIn(int row, int col, int t)
 {
 
 	const auto &knownObjects = battle_info->getKnownObjectsView();
-
 	for (const auto &[pos, objects] : knownObjects)
 	{
 		if (objects.empty())

@@ -34,22 +34,23 @@ namespace Algorithm_212535058_324022904
         vector<OppData> opponents;
         map<pair<int, int>, vector<GameObject *>> knownObjects;
         std::vector<std::unique_ptr<GameObject>> objectStorage;
-
         bool set_shells = false;
         pair<int, int> map_size = {-1, -1};
 
     public:
         TankBattleInfo(int tank_index, int player_id);
-        ~TankBattleInfo() override {
+        ~TankBattleInfo() override
+        {
             // Clear containers (though not strictly necessary as they'll auto-clean)
             knownObjects.clear();
             objectStorage.clear();
             opponents.clear();
         }
+
         // Block copy operations
-        TankBattleInfo(const TankBattleInfo&) = delete;
-        TankBattleInfo& operator=(const TankBattleInfo&) = delete;
-    
+        TankBattleInfo(const TankBattleInfo &) = delete;
+        TankBattleInfo &operator=(const TankBattleInfo &) = delete;
+
         void setBackwardCooldown(int cooldown = 2);
 
         void setWaitingForBackward(bool);
@@ -57,8 +58,10 @@ namespace Algorithm_212535058_324022904
 
         void setMovedBackwardLast(bool);
         bool getMovedBackwardLast();
-        void decreaseShootCooldown(){ shoot_cooldown>0?shoot_cooldown--:shoot_cooldown;}
-        void setShootCooldown(int cooldown = 4);        bool isWaitingToReverse() const;
+
+        void decreaseShootCooldown() { shoot_cooldown > 0 ? shoot_cooldown-- : shoot_cooldown; }
+        void setShootCooldown(int cooldown = 4);
+        bool isWaitingToReverse() const;
         bool isWaitingToShoot() const;
 
         void decreaseRemainingShells();
@@ -76,16 +79,14 @@ namespace Algorithm_212535058_324022904
 
         void setOpponents(vector<OppData> opps);
         void addOpponent(pair<int, int> position, Direction dir = Direction::None);
-  std::vector<std::unique_ptr<GameObject>> takeObjectStorage();
-    
+        pair<std::map<std::pair<int, int>, std::vector<GameObject *>>, vector<std::unique_ptr<GameObject>>> getKnownObjects();
+
         // Modified to accept rvalue references
         void setFrameObjects(
-            std::map<std::pair<int,int>, std::vector<GameObject*>>&& newKnownObjects,
-            std::vector<std::unique_ptr<GameObject>>&& newStorage
-        );
+            std::map<std::pair<int, int>, std::vector<GameObject *>> &&newKnownObjects,
+            std::vector<std::unique_ptr<GameObject>> &&newStorage);
         GameObject *getObjectByPosition(pair<int, int> pos) const;
 
-        map<pair<int, int>, vector<GameObject *>> getKnownObjects() const;
         void setKnownObjects(map<pair<int, int>, vector<GameObject *>> knownObjects);
         void updateObjectDirByPosition(pair<int, int> pos, Direction dir);
 
@@ -93,11 +94,13 @@ namespace Algorithm_212535058_324022904
         pair<int, int> getMapSize() const;
 
         Direction calculateRealDirection(int currRow, int currCol, int targetRow, int targetCol);
-        const std::map<std::pair<int,int>, std::vector<GameObject*>>& getKnownObjectsView() const {
+        const std::map<std::pair<int, int>, std::vector<GameObject *>> &getKnownObjectsView() const
+        {
             return knownObjects;
         }
 
-        std::map<std::pair<int,int>, std::vector<GameObject*>>& getKnownObjectsForUpdate() {
+        std::map<std::pair<int, int>, std::vector<GameObject *>> &getKnownObjectsForUpdate()
+        {
             return knownObjects;
         }
     };

@@ -1,6 +1,6 @@
 #include "../header/TankBattleInfo.h"
 using namespace Algorithm_212535058_324022904;
-
+#include <iostream>
 /**
  * @brief Constructor initializing the tank's ID and player ID.
  *
@@ -12,26 +12,29 @@ TankBattleInfo::TankBattleInfo(int tank_index, int player_index) : id(tank_index
     direction = player_id == 1 ? L : R;
 }
 
-vector<std::unique_ptr<GameObject>> TankBattleInfo::takeObjectStorage()
+pair<std::map<std::pair<int, int>, std::vector<GameObject *>>,vector<std::unique_ptr<GameObject>>> TankBattleInfo::getKnownObjects()
 {
     vector<std::unique_ptr<GameObject>> newStorage;
+    std::map<std::pair<int, int>, std::vector<GameObject *>> newKnownObjects;
+
     for (auto &obj : objectStorage)
     {
         if (obj)
         {
-            newStorage.push_back(obj->clone()); // Safe: deep copy
+            auto clone = obj->clone();
+            newStorage.push_back(std::move(clone)); // Safe: deep copy
+            newKnownObjects[obj->getPos()].push_back(newStorage.back().get());
         }
     }
-    return newStorage;
+    return { std::move(newKnownObjects),std::move(newStorage)};
 }
 void TankBattleInfo::setFrameObjects(
     std::map<std::pair<int, int>, std::vector<GameObject *>> &&newKnownObjects,
     std::vector<std::unique_ptr<GameObject>> &&newStorage)
 {
-    knownObjects.clear();  // Clear existing known objects
-    objectStorage.clear(); // Clear existing storage
-    objectStorage = std::move(newStorage);
     knownObjects = std::move(newKnownObjects);
+    objectStorage = std::move(newStorage);
+std::cerr << "After setting frame objects, known objects size: " << knownObjects.size() << std::endl;
 }
 
 /**
@@ -151,27 +154,7 @@ void TankBattleInfo::addOpponent(pair<int, int> position, Direction dir)
 GameObject *TankBattleInfo::getObjectByPosition(pair<int, int> pos) const
 {
     auto it = knownObjects.find(pos);
-    return it != knownObjects.end() && !it->second.empty() ? it->second.size() > 1 ? it->second[1] : it->second[0] : nullptr;
-}
-
-/**
- * @brief Get a map of all known objects indexed by their position.
- */
-map<pair<int, int>, vector<GameObject *>> TankBattleInfo::getKnownObjects() const
-{
-    std::map<std::pair<int, int>, std::vector<GameObject *>> copy;
-    for (const auto &[pos, objects] : knownObjects)
-    {
-        for (auto *obj : objects)
-        {
-            if (obj)
-            {
-                auto clone = obj->clone();
-                copy[pos].push_back(clone.get());
-            } // Requires GameObject::clone()
-        }
-    }
-    return copy;
+    return it != knownObjects.end() && !it->second.empty() ? it->second.back() : nullptr;
 }
 
 /**
@@ -208,15 +191,15 @@ void TankBattleInfo::updateObjectDirByPosition(pair<int, int> pos, Direction dir
 {
     if (!knownObjects[pos].empty())
     {
-        if (knownObjects[pos].size() > 1 && knownObjects[pos][1]->getSymbol() == '*')
+        if (knownObjects[pos].back()->getSymbol() == '*')
         {
-            dynamic_cast<Shell *>(knownObjects[pos][1])->setDirection(dir);
-        }
-        else if (knownObjects[pos][0]->getSymbol() == '*')
-        {
-            dynamic_cast<Shell *>(knownObjects[pos][0])->setDirection(dir);
-        }
-    }
+            dynamic_cast<Shell *>(knownObjects[pos].back())->setDirection(dir);
+        // }
+        // else if (knownObjects[pos][0]->getSymbol() == '*')
+        // {
+        //     dynamic_cast<Shell *>(knownObjects[pos][0])->setDirection(dir);
+        // }
+    }}
 }
 
 /**
@@ -247,9 +230,9 @@ Direction TankBattleInfo::calculateRealDirection(int currRow, int currCol, int t
     if (rowDiff == -colDiff && rowDiff > 0)
         return Direction::DL; // Down-Left (strict diagonal)
     if (rowDiff == colDiff && rowDiff < 0)
-        return Direction::UL; // Up-Right (strict diagonal)
+        return Direction::UL; // Up-Left (strict diagonal)
     if (rowDiff == -colDiff && rowDiff < 0)
-        return Direction::UR; // Up-Left (strict diagonal)
+        return Direction::UR; // Up-Right (strict diagonal)
 
     return Direction::None; // None for non-aligned movement
 }

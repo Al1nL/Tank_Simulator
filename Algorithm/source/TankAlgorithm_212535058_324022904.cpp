@@ -1,6 +1,5 @@
 #include "../header/TankAlgorithm_212535058_324022904.h"
 
-
 using namespace UserCommon_212535058_324022904;
 using namespace Algorithm_212535058_324022904;
 REGISTER_TANK_ALGORITHM(TankAlgorithm_212535058_324022904);
@@ -42,7 +41,6 @@ ActionRequest TankAlgorithm_212535058_324022904::decideAction()
 		last_info_update = current_turn;
 		return ActionRequest::GetBattleInfo;
 	}
-
 	auto [targetRow, targetCol] = opp.opponentPos;
 	opp.opponentDir = opp.opponentDir == None ? battle_info->calculateRealDirection(currentRow, currentCol, targetRow, targetCol) : opp.opponentDir;
 
@@ -96,6 +94,7 @@ ActionRequest TankAlgorithm_212535058_324022904::decideAction()
 	pair<int, int> next = nextStep(true, battle_info->getPosition(), battle_info->getDirection());
 	if ((currentRow != targetRow || currentCol != targetCol) && isOccupierFree(next))
 	{
+		
 		return ActionRequest::MoveForward;
 	}
 
@@ -137,8 +136,7 @@ Direction TankAlgorithm_212535058_324022904::simulateRotation(ActionRequest act)
  */
 bool TankAlgorithm_212535058_324022904::shouldShootOpponent(OppData &opp)
 {
-	if (battle_info->isWaitingToShoot() || battle_info->getRemainingShells() <= 0 || !isAlignedWithOpponent(opp.opponentPos))
-	{
+	if (battle_info->isWaitingToShoot() || battle_info->getRemainingShells() <= 0 ){
 		return false;
 	}
 
@@ -169,6 +167,7 @@ bool TankAlgorithm_212535058_324022904::shouldShootOpponent(OppData &opp)
 			return true;
 		}
 	}
+
 	return false;
 }
 
