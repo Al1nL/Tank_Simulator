@@ -34,7 +34,6 @@ void TankBattleInfo::setFrameObjects(
 {
     knownObjects = std::move(newKnownObjects);
     objectStorage = std::move(newStorage);
-std::cerr << "After setting frame objects, known objects size: " << knownObjects.size() << std::endl;
 }
 
 /**
